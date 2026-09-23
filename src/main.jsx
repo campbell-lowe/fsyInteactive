@@ -1,209 +1,132 @@
 import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { additionalSources, octoberLesson, scriptureSources } from './data/lessons';
+import { octoberBoard, spaceTypeLabels } from './data/boards';
 import {
-  awardParticipation,
+  awardPoints,
   clampTeamCount,
+  createGameState,
   createTeams,
-  getAdventureProgress,
+  getActiveTeam,
+  moveActiveTeam,
+  resetGame,
+  resolveSpace,
+  rollDie,
+  startGame,
   suggestTeamCount,
 } from './game/adventure';
 import './styles.css';
 
-function App() {
-  const [phase, setPhase] = useState('setup');
-  const [participantCount, setParticipantCount] = useState(12);
-  const [teamCount, setTeamCount] = useState(suggestTeamCount(12));
-  const [teams, setTeams] = useState([]);
-  const [currentLocation, setCurrentLocation] = useState(0);
-  const [revealed, setRevealed] = useState(false);
-  const [completedLocations, setCompletedLocations] = useState([]);
-  const [reflection, setReflection] = useState('');
+const journeyCards = [
+  { color: 'coral', name: 'Whole Class', text: 'Every team gives a quick answer before the host reveals the space.' },
+  { color: 'gold', name: 'Lightning Round', text: 'Teams have 20 seconds to agree, then show their answer together.' },
+  { color: 'sky', name: 'Swap a Spark', text: 'The active team can ask another team for a helpful idea.' },
+  { color: 'plum', name: 'Double Discussion', text: 'Take an extra minute to explain why the choice could help someone.' },
+];
 
-  const location = octoberLesson.locations[currentLocation];
-  const progress = getAdventureProgress(currentLocation, octoberLesson.locations.length);
+function App() {
+  const [phase, setPhase] = useState('menu');
+  const [participants, setParticipants] = useState(12);
+  const [teamCount, setTeamCount] = useState(suggestTeamCount(12));
+  const [game, setGame] = useState(null);
+  const [selectedChoice, setSelectedChoice] = useState(null);
+  const [revealed, setRevealed] = useState(false);
+  const [journeyCard, setJourneyCard] = useState(null);
+  const [pointTeamIds, setPointTeamIds] = useState([]);
 
   function updateParticipants(value) {
-    const nextCount = Math.max(0, Number(value) || 0);
-    setParticipantCount(nextCount);
-    setTeamCount(suggestTeamCount(nextCount));
+    const count = Math.max(0, Number(value) || 0);
+    setParticipants(count);
+    setTeamCount(suggestTeamCount(count));
   }
 
-  function startAdventure() {
-    const safeTeamCount = clampTeamCount(teamCount, participantCount);
-    setTeamCount(safeTeamCount);
-    setTeams(createTeams(safeTeamCount));
-    setCurrentLocation(0);
-    setCompletedLocations([]);
+  function beginGame() {
+    const safeCount = clampTeamCount(teamCount, participants);
+    const teams = createTeams(safeCount);
+    const nextGame = startGame(createGameState({ teams, board: octoberBoard }));
+    setGame(nextGame);
+    setPointTeamIds([teams[0]?.id].filter(Boolean));
+    setSelectedChoice(null);
     setRevealed(false);
-    setPhase('adventure');
+    setJourneyCard(null);
+    setPhase('board');
   }
 
-  function resetAdventure() {
-    setPhase('setup');
-    setTeams([]);
-    setCurrentLocation(0);
-    setCompletedLocations([]);
+  function resetToMenu() {
+    setGame(null);
+    setPhase('menu');
+    setSelectedChoice(null);
     setRevealed(false);
-    setReflection('');
+    setJourneyCard(null);
   }
 
-  function awardAndAdvance() {
-    setTeams((currentTeams) => awardParticipation(currentTeams));
-    setCompletedLocations((locations) => [...new Set([...locations, location.id])]);
-    if (currentLocation === octoberLesson.locations.length - 1) {
-      setPhase('complete');
-      return;
+  function rollAndMove() {
+    setGame((currentGame) => moveActiveTeam(rollDie(currentGame)));
+  }
+
+  function resolveCurrentSpace(bonus = 0) {
+    setGame((currentGame) => {
+      const withPoints = awardPoints(currentGame, pointTeamIds);
+      return resolveSpace(withPoints, { choiceIndex: selectedChoice, bonus });
+    });
+    setSelectedChoice(null);
+    setRevealed(false);
+    setJourneyCard(null);
+    if (game && game.status === 'landed') {
+      const activeTeam = getActiveTeam(game);
+      const destination = game.board.spaces[Math.min(activeTeam.position + bonus, game.board.spaces.length - 1)];
+      if (destination?.type === 'finish') setPhase('complete');
     }
-    setCurrentLocation((index) => index + 1);
-    setRevealed(false);
+    setTimeout(() => {
+      setGame((currentGame) => {
+        if (!currentGame || currentGame.status === 'complete') setPhase('complete');
+        else setPointTeamIds([getActiveTeam(currentGame)?.id].filter(Boolean));
+        return currentGame;
+      });
+    }, 0);
   }
 
-  function skipLocation() {
-    if (currentLocation === octoberLesson.locations.length - 1) {
-      setPhase('complete');
-      return;
-    }
-    setCurrentLocation((index) => index + 1);
-    setRevealed(false);
+  function choosePointTeam(teamId) {
+    setPointTeamIds((ids) => ids.includes(teamId) ? ids.filter((id) => id !== teamId) : [...ids, teamId]);
   }
 
-  function restartCurrentLocation() {
-    setRevealed(false);
-  }
+  if (phase === 'menu') return <MenuScreen onStart={() => setPhase('setup')} />;
+  if (phase === 'setup') return <SetupScreen participants={participants} teamCount={teamCount} updateParticipants={updateParticipants} setTeamCount={setTeamCount} onBack={resetToMenu} onStart={beginGame} />;
+  if (phase === 'complete') return <CompleteScreen game={game} onRestart={() => { setGame(resetGame(game)); setPhase('board'); }} onMenu={resetToMenu} />;
 
-  if (phase === 'setup') {
-    return <SetupScreen participantCount={participantCount} teamCount={teamCount} updateParticipants={updateParticipants} setTeamCount={setTeamCount} startAdventure={startAdventure} />;
-  }
-
-  if (phase === 'complete') {
-    return <CompletionScreen teams={teams} reflection={reflection} setReflection={setReflection} resetAdventure={resetAdventure} />;
-  }
-
-  return (
-    <AdventureScreen
-      lesson={octoberLesson}
-      teams={teams}
-      location={location}
-      currentLocation={currentLocation}
-      progress={progress}
-      revealed={revealed}
-      completedLocations={completedLocations}
-      setRevealed={setRevealed}
-      awardAndAdvance={awardAndAdvance}
-      skipLocation={skipLocation}
-      restartCurrentLocation={restartCurrentLocation}
-      resetAdventure={resetAdventure}
-    />
-  );
+  return <BoardGameScreen game={game} selectedChoice={selectedChoice} setSelectedChoice={setSelectedChoice} revealed={revealed} setRevealed={setRevealed} journeyCard={journeyCard} drawCard={() => setJourneyCard(journeyCards[Math.floor(Math.random() * journeyCards.length)])} pointTeamIds={pointTeamIds} choosePointTeam={choosePointTeam} onRoll={rollAndMove} onResolve={resolveCurrentSpace} onReset={resetToMenu} />;
 }
 
-function BrandBar({ phase, resetAdventure }) {
-  return (
-    <header className="game-topbar">
-      <a className="brand" href="#top" onClick={(event) => { event.preventDefault(); resetAdventure(); }}>FSY<span>Interactive</span></a>
-      <div className="game-topbar-meta"><span>October · Module 10</span><span className="teacher-badge">Teacher view</span></div>
-    </header>
-  );
+function Header({ onBack }) {
+  return <header className="app-header"><button className="wordmark" onClick={onBack} type="button">FSY<span>Interactive</span></button><span className="header-context">October · Your Body Is Sacred</span></header>;
 }
 
-function SetupScreen({ participantCount, teamCount, updateParticipants, setTeamCount, startAdventure }) {
-  return (
-    <main className="game-shell setup-shell" id="top">
-      <BrandBar resetAdventure={() => {}} />
-      <section className="setup-layout">
-        <div className="setup-intro">
-          <p className="eyebrow">Team Adventure · October</p>
-          <h1>Your body is <em>sacred.</em></h1>
-          <p className="setup-description">A 25-minute, teacher-led adventure through identity, care, respect, choices, and light. Teams talk together; nobody needs a phone or login.</p>
-          <div className="timing-strip"><span>03 min</span><span>02 min</span><span>10 min</span><span>06 min</span><span>04 min</span></div>
-          <div className="timing-labels"><span>intro</span><span>setup</span><span>adventure</span><span>connect</span><span>reflect</span></div>
-        </div>
-        <section className="setup-panel" aria-labelledby="setup-heading">
-          <p className="eyebrow">Before you begin</p>
-          <h2 id="setup-heading">Set up the <em>room.</em></h2>
-          <label htmlFor="participants">Number of participants</label>
-          <input id="participants" className="number-input" type="number" min="1" max="100" value={participantCount || ''} onChange={(event) => updateParticipants(event.target.value)} />
-          <div className="team-setting">
-            <div><span className="setting-label">Suggested teams</span><strong>{Math.max(1, teamCount)}</strong><small>about {participantCount && teamCount ? Math.ceil(participantCount / teamCount) : 0} per team</small></div>
-            <div className="stepper" aria-label="Adjust number of teams">
-              <button type="button" aria-label="Fewer teams" disabled={teamCount <= 1} onClick={() => setTeamCount((count) => Math.max(1, count - 1))}>−</button>
-              <span>{teamCount}</span>
-              <button type="button" aria-label="More teams" disabled={teamCount >= Math.max(1, participantCount)} onClick={() => setTeamCount((count) => Math.min(Math.max(1, participantCount), count + 1))}>+</button>
-            </div>
-          </div>
-          <p className="setup-note">Teams will be temporary labels only. No names or answers are collected.</p>
-          <button className="primary-button wide-button" disabled={participantCount < 1} onClick={startAdventure} type="button">Start Team Adventure <span aria-hidden="true">→</span></button>
-        </section>
-      </section>
-      <SourceShelf />
-    </main>
-  );
+function MenuScreen({ onStart }) {
+  return <main className="app-shell menu-screen"><Header onBack={() => {}} /><section className="menu-hero"><div><p className="eyebrow">A shared tabletop experience</p><h1>Gather around the <em>board.</em></h1><p>One screen. Temporary team pieces. A journey through the October FSY topic with choices, surprises, and conversation.</p></div><div className="menu-die" aria-hidden="true">6</div></section><section className="mode-section"><p className="eyebrow">Choose a way in</p><div className="mode-grid"><button className="mode-card selected" onClick={onStart} type="button"><span>01 · Ready to play</span><strong>Sacred Journey</strong><p>Roll, move, draw surprise cards, and help your team reach The Lookout.</p><b>Play board game →</b></button><div className="mode-card muted"><span>02 · Coming next</span><strong>Sacred Puzzle</strong><p>Connect scriptures, principles, and real-life scenarios.</p></div><div className="mode-card muted"><span>03 · Explore anytime</span><strong>Lesson Guide</strong><p>Deep-dive into the October lesson and its resources.</p></div></div></section></main>;
 }
 
-function SourceShelf() {
-  return (
-    <section className="source-shelf" aria-labelledby="source-shelf-heading">
-      <div><p className="eyebrow">Teacher source shelf</p><h2 id="source-shelf-heading">Ground the adventure in <em>good resources.</em></h2></div>
-      <div className="shelf-links">
-        {[...scriptureSources.slice(0, 2), additionalSources[0]].map((source) => <a key={source.title || source.reference} href={source.url} target="_blank" rel="noreferrer"><span>{source.reference || source.type}</span><strong>{source.title}</strong><span aria-hidden="true">↗</span></a>)}
-      </div>
-    </section>
-  );
+function SetupScreen({ participants, teamCount, updateParticipants, setTeamCount, onBack, onStart }) {
+  return <main className="app-shell setup-screen"><Header onBack={onBack} /><section className="setup-layout"><div><button className="text-button" onClick={onBack} type="button">← Game menu</button><p className="eyebrow">Sacred Journey · October</p><h1>Set the <em>table.</em></h1><p className="setup-copy">Choose the number of players and teams. Everyone plays from one shared screen; no names, phones, or accounts are needed.</p></div><section className="setup-card"><label htmlFor="participants">Players in the room</label><input id="participants" type="number" min="1" max="100" value={participants || ''} onChange={(event) => updateParticipants(event.target.value)} /><div className="team-control"><div><span>Team pieces</span><strong>{teamCount}</strong><small>maximum 4 teams</small></div><div className="stepper"><button aria-label="Fewer teams" disabled={teamCount <= 1} onClick={() => setTeamCount((count) => Math.max(1, count - 1))} type="button">−</button><span>{teamCount}</span><button aria-label="More teams" disabled={teamCount >= Math.min(4, Math.max(1, participants))} onClick={() => setTeamCount((count) => Math.min(4, Math.max(1, participants), count + 1))} type="button">+</button></div></div><button className="primary-button wide" disabled={participants < 1} onClick={onStart} type="button">Set the pieces on the board →</button></section></section></main>;
 }
 
-function AdventureScreen({ lesson, teams, location, currentLocation, progress, revealed, completedLocations, setRevealed, awardAndAdvance, skipLocation, restartCurrentLocation, resetAdventure }) {
-  return (
-    <main className="game-shell adventure-shell" id="top">
-      <BrandBar resetAdventure={resetAdventure} />
-      <div className="adventure-header">
-        <div><p className="eyebrow">Team Adventure</p><h1>{lesson.title}</h1></div>
-        <div className="progress-stat"><strong>{currentLocation + 1} <span>/ {lesson.locations.length}</span></strong><small>locations explored</small></div>
-      </div>
-      <div className="adventure-progress"><span style={{ width: `${Math.max(8, progress)}%` }} /></div>
-      <div className="adventure-layout">
-        <aside className="map-panel" aria-label="Adventure map">
-          <div className="map-heading"><span>Adventure map</span><small>{progress}% complete</small></div>
-          <div className="map-list">
-            {lesson.locations.map((mapLocation, index) => <div className={`map-location ${index === currentLocation ? 'current' : ''} ${completedLocations.includes(mapLocation.id) ? 'completed' : ''}`} key={mapLocation.id}><span>{mapLocation.number}</span><div><strong>{mapLocation.name}</strong><small>{mapLocation.objective}</small></div>{completedLocations.includes(mapLocation.id) && <b aria-label="complete">✓</b>}</div>)}
-          </div>
-          <div className="map-legend"><span><i className="legend-dot current-dot" />current</span><span><i className="legend-dot complete-dot" />complete</span></div>
-        </aside>
-        <section className="challenge-panel" aria-labelledby="location-heading">
-          <div className="challenge-kicker"><span>Location {location.number}</span><span>All teams together</span></div>
-          <h2 id="location-heading">{location.name}</h2>
-          <p className="objective">Learning objective: <strong>{location.objective}</strong></p>
-          <p className="scene-copy">{location.scene}</p>
-          <div className="challenge-card"><span className="challenge-label">Team challenge</span><p>{location.prompt}</p><span className="answer-mode">Talk it out · answer with cards or a raised hand</span></div>
-          {revealed && <RevealPanel location={location} />}
-          <div className="teacher-controls">
-            <div className="control-caption"><span className="control-dot" />Teacher controls</div>
-            <div className="control-actions">
-              {!revealed ? <button className="primary-button" onClick={() => setRevealed(true)} type="button">Reveal principle <span aria-hidden="true">↓</span></button> : <button className="primary-button" onClick={awardAndAdvance} type="button">{currentLocation === lesson.locations.length - 1 ? 'Complete adventure' : 'Award participation & continue'} <span aria-hidden="true">→</span></button>}
-              <button className="quiet-button" onClick={skipLocation} type="button">Skip location</button>
-              {revealed && <button className="quiet-button" onClick={restartCurrentLocation} type="button">Hide reveal</button>}
-            </div>
-          </div>
-        </section>
-      </div>
-    </main>
-  );
+function BoardGameScreen({ game, selectedChoice, setSelectedChoice, revealed, setRevealed, journeyCard, drawCard, pointTeamIds, choosePointTeam, onRoll, onResolve, onReset }) {
+  const activeTeam = getActiveTeam(game);
+  const landedSpace = game.pendingSpace;
+  const canChoose = landedSpace?.options && !revealed;
+
+  return <main className="app-shell board-screen"><Header onBack={onReset} /><div className="board-heading"><div><p className="eyebrow">Sacred Journey · Turn {game.turn}</p><h1>{game.board.title}</h1></div><div className="turn-display"><span className={`team-token ${activeTeam?.color}`}>{activeTeam?.id}</span><div><small>Now playing</small><strong>{activeTeam?.label}</strong></div></div></div><section className="tabletop"><div className="board-meta"><span>Roll the die, then resolve the space</span><span>{game.board.spaces.length - 1} spaces to The Lookout</span></div><div className="board-path">{game.board.spaces.map((space, index) => <BoardSpace key={space.id} space={space} index={index} teams={game.teams} isPending={landedSpace?.id === space.id} />)}</div><div className="board-deck-row">{journeyCard ? <div className={`journey-card ${journeyCard.color}`}><span>Card drawn</span><strong>{journeyCard.name}</strong><p>{journeyCard.text}</p></div> : <button className="draw-card" onClick={drawCard} type="button"><span className="card-icon">✦</span><span><strong>Draw a journey card</strong><small>Add a surprise rule to this turn</small></span><b>→</b></button>}<div className="team-score-strip">{game.teams.map((team) => <div className={team.id === activeTeam?.id ? 'active' : ''} key={team.id}><i className={`team-token ${team.color}`}>{team.id}</i><span>{team.label}</span><strong>{team.points}</strong></div>)}</div></div></section><section className="turn-panel"><div className="turn-panel-top"><span className="space-type">{landedSpace ? spaceTypeLabels[landedSpace.type] : 'Your turn'}</span><span>Team {activeTeam?.id} · {activeTeam?.name}</span></div>{!landedSpace && <><h2>Roll for {activeTeam?.label}.</h2><p>Say the number out loud, move the team piece that many spaces, and see what the board gives you.</p><button className="dice-button" onClick={onRoll} type="button"><span className="die-face">{game.roll || '?'}</span><strong>{game.roll ? 'Move piece' : 'Roll the die'}</strong><small>{game.roll ? `Rolled a ${game.roll}` : '1–6 spaces'}</small></button></>}{landedSpace && <LandedSpace space={landedSpace} selectedChoice={selectedChoice} setSelectedChoice={setSelectedChoice} revealed={revealed} setRevealed={setRevealed} pointTeamIds={pointTeamIds} choosePointTeam={choosePointTeam} onResolve={onResolve} />}</section></main>;
 }
 
-function RevealPanel({ location }) {
-  return <div className="reveal-panel"><div><span className="reveal-label">Principle revealed</span><p>{location.reveal}</p></div><div><span className="reveal-label">Discuss</span><p>{location.discussion}</p></div><a href={location.resource.url} target="_blank" rel="noreferrer">Open {location.resource.label} <span aria-hidden="true">↗</span></a></div>;
+function BoardSpace({ space, index, teams, isPending }) {
+  const pieces = teams.filter((team) => team.position === index);
+  return <div className={`board-cell type-${space.type} ${isPending ? 'pending' : ''}`} style={{ gridRow: space.row, gridColumn: space.column }}><span className="space-number">{index}</span><span className="space-type-label">{spaceTypeLabels[space.type]}</span><strong>{space.label}</strong>{pieces.length > 0 && <div className="pieces">{pieces.map((team) => <span className={`team-token ${team.color}`} key={team.id}>{team.id}</span>)}</div>}</div>;
 }
 
-function CompletionScreen({ teams, reflection, setReflection, resetAdventure }) {
-  return (
-    <main className="game-shell completion-shell" id="top">
-      <BrandBar resetAdventure={resetAdventure} />
-      <section className="completion-layout">
-        <div className="completion-intro"><p className="eyebrow">Adventure complete</p><h1>The light moves <em>with you.</em></h1><p>You explored five app-created locations and made space for scripture, discussion, and thoughtful choices.</p><div className="team-results">{teams.map((team) => <div key={team.id}><span>{team.label}</span><strong>{team.points}</strong><small>participation</small></div>)}</div></div>
-        <div className="closing-panel"><span className="closing-number">05</span><p className="eyebrow">Private reflection</p><h2>One thing I will <em>carry forward.</em></h2><textarea aria-label="Closing reflection" value={reflection} onChange={(event) => setReflection(event.target.value)} placeholder="I will..." rows="4" /><small>Nothing is saved. This reflection is only for the teacher or student at this moment.</small><button className="primary-button wide-button" onClick={resetAdventure} type="button">Return to setup</button></div>
-      </section>
-    </main>
-  );
+function LandedSpace({ space, selectedChoice, setSelectedChoice, revealed, setRevealed, pointTeamIds, choosePointTeam, onResolve }) {
+  return <div className="landed-space"><h2>{space.label}</h2>{space.type !== 'finish' && <p className="landing-prompt">{space.prompt || space.event || 'The team has reached the finish!'}</p>}{space.options && !revealed && <div className="choice-list">{space.options.map((option, index) => <button className={selectedChoice === index ? 'selected' : ''} key={option} onClick={() => setSelectedChoice(index)} type="button"><span>{String.fromCharCode(65 + index)}</span>{option}</button>)}</div>}{revealed && <div className="result-card"><span>Space resolved</span><p>{space.type === 'event' ? space.event : space.type === 'shortcut' ? 'A shortcut opens. Move ahead to the next branch.' : 'The team made room for discussion and a thoughtful choice.'}</p>{space.resource && <a href={space.resource.url} target="_blank" rel="noreferrer">Open {space.resource.label} ↗</a>}</div>}{!revealed && !space.options && <p className="verbal-note">Read this space aloud, let the group respond, then reveal the result.</p>}{revealed && <div className="points-row"><span>Optional point for contribution</span>{pointTeamIds.map((teamId) => <button key={teamId} onClick={() => choosePointTeam(teamId)} type="button">Team {teamId} +1</button>)}</div>}{!revealed ? <button className="primary-button" disabled={Boolean(space.options && selectedChoice === null)} onClick={() => setRevealed(true)} type="button">Reveal space →</button> : <div className="resolve-actions"><button className="primary-button" onClick={() => onResolve(0)} type="button">End turn</button>{['challenge', 'group'].includes(space.type) && <button className="bonus-button" onClick={() => onResolve(1)} type="button">Reward +1 move</button>}</div>}</div>;
+}
+
+function CompleteScreen({ game, onRestart, onMenu }) {
+  return <main className="app-shell complete-screen"><Header onBack={onMenu} /><section className="complete-card"><p className="eyebrow">The board has a winner</p><h1>{game.winner?.label} reached <em>The Lookout.</em></h1><p>The class played through the journey together. Celebrate the choices, stories, and conversations that got every team to the table.</p><div className="final-scores">{game.teams.map((team) => <div key={team.id}><i className={`team-token ${team.color}`}>{team.id}</i><span>{team.label}</span><strong>{team.points}</strong></div>)}</div><div className="complete-actions"><button className="primary-button" onClick={onRestart} type="button">Play again</button><button className="text-button" onClick={onMenu} type="button">Choose another game</button></div></section></main>;
 }
 
 createRoot(document.getElementById('root')).render(<StrictMode><App /></StrictMode>);
