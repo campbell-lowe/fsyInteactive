@@ -1,4 +1,4 @@
-import { StrictMode, useState } from "react";
+import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { octoberBoard, spaceTypeLabels } from "./data/boards";
 import {
@@ -10,6 +10,7 @@ import {
   moveActiveTeam,
   resetGame,
   resolveSpace,
+  rollRandomDie,
   rollDice,
   startGame,
   suggestTeamCount,
@@ -126,6 +127,40 @@ const boardTrackPath = boardCirclePositions.slice(0, -1).map((_, gapIndex) => {
   ];
   return `M${pathPoints.map(({ x, y }) => `${x * 10},${y * 6.2}`).join(" L")}`;
 }).join(" ");
+const slideColors = ["#dc5b5b", "#3687b8", "#cf4f8b", "#43936b", "#8764a8"];
+
+function createConnectorPath(space) {
+  const start = boardRoutePoints[space.position];
+  const end = boardRoutePoints[space.transport.destination];
+  const [controlOne, controlTwo] = space.transport.controls;
+  const startPoint = { x: start.x * 10, y: start.y * 6.2 };
+  const endPoint = { x: end.x * 10, y: end.y * 6.2 };
+
+  if (space.transport.type === "bridge") {
+    return `M${startPoint.x},${startPoint.y} C${controlOne[0]},${controlOne[1]} ${controlTwo[0]},${controlTwo[1]} ${endPoint.x},${endPoint.y}`;
+  }
+
+  const loopCenter = {
+    x: 0.125 * startPoint.x + 0.375 * controlOne[0] + 0.375 * controlTwo[0] + 0.125 * endPoint.x,
+    y: 0.125 * startPoint.y + 0.375 * controlOne[1] + 0.375 * controlTwo[1] + 0.125 * endPoint.y,
+  };
+  const tangent = {
+    x: 0.75 * (controlOne[0] - startPoint.x) + 1.5 * (controlTwo[0] - controlOne[0]) + 0.75 * (endPoint.x - controlTwo[0]),
+    y: 0.75 * (controlOne[1] - startPoint.y) + 1.5 * (controlTwo[1] - controlOne[1]) + 0.75 * (endPoint.y - controlTwo[1]),
+  };
+  const tangentLength = Math.hypot(tangent.x, tangent.y) || 1;
+  const direction = { x: tangent.x / tangentLength, y: tangent.y / tangentLength };
+  const normal = { x: -direction.y, y: direction.x };
+  const loopRadius = 18;
+  const loopEntry = { x: loopCenter.x + normal.x * loopRadius, y: loopCenter.y + normal.y * loopRadius };
+  const loopOpposite = { x: loopCenter.x - normal.x * loopRadius, y: loopCenter.y - normal.y * loopRadius };
+  const approachControlOne = { x: (startPoint.x + controlOne[0]) / 2, y: (startPoint.y + controlOne[1]) / 2 };
+  const approachControlTwo = { x: loopEntry.x - direction.x * loopRadius, y: loopEntry.y - direction.y * loopRadius };
+  const departureControlOne = { x: loopEntry.x - direction.x * loopRadius, y: loopEntry.y - direction.y * loopRadius };
+  const departureControlTwo = { x: (controlTwo[0] + endPoint.x) / 2, y: (controlTwo[1] + endPoint.y) / 2 };
+
+  return `M${startPoint.x},${startPoint.y} C${approachControlOne.x},${approachControlOne.y} ${approachControlTwo.x},${approachControlTwo.y} ${loopEntry.x},${loopEntry.y} A${loopRadius},${loopRadius} 0 0 0 ${loopOpposite.x},${loopOpposite.y} A${loopRadius},${loopRadius} 0 0 0 ${loopEntry.x},${loopEntry.y} C${departureControlOne.x},${departureControlOne.y} ${departureControlTwo.x},${departureControlTwo.y} ${endPoint.x},${endPoint.y}`;
+}
 
 function App() {
   const [phase, setPhase] = useState("menu");
@@ -136,6 +171,12 @@ function App() {
   const [selectedChoice, setSelectedChoice] = useState(null);
   const [revealed, setRevealed] = useState(false);
   const [diceRolling, setDiceRolling] = useState(false);
+  const [diceSettling, setDiceSettling] = useState(false);
+  const [rollingDice, setRollingDice] = useState(null);
+  const [previewDice, setPreviewDice] = useState(() => [
+    rollRandomDie(),
+    rollRandomDie(),
+  ]);
   const [pointTeamIds, setPointTeamIds] = useState([]);
 
   function updateParticipants(value) {
@@ -177,8 +218,25 @@ function App() {
 
   function rollDiceForTurn() {
     setDiceRolling(true);
+    setRollingDice([1, 1]);
     setGame((currentGame) => rollDice(currentGame));
-    setTimeout(() => setDiceRolling(false), 700);
+    const diceInterval = setInterval(() => {
+      setRollingDice([
+        rollRandomDie(),
+        rollRandomDie(),
+      ]);
+    }, 85);
+    setTimeout(() => {
+      clearInterval(diceInterval);
+      setRollingDice(null);
+      setDiceRolling(false);
+      setDiceSettling(true);
+      setTimeout(() => {
+        setGame((currentGame) => moveActiveTeam(currentGame));
+        setDiceSettling(false);
+        setPreviewDice([rollRandomDie(), rollRandomDie()]);
+      }, 500);
+    }, 850);
   }
 
   function moveAfterRoll() {
@@ -257,7 +315,10 @@ function App() {
       setSelectedChoice={setSelectedChoice}
       revealed={revealed}
       setRevealed={setRevealed}
-        diceRolling={diceRolling}
+      diceRolling={diceRolling}
+      diceSettling={diceSettling}
+      rollingDice={rollingDice}
+      previewDice={previewDice}
       pointTeamIds={pointTeamIds}
       choosePointTeam={choosePointTeam}
         onRoll={rollDiceForTurn}
@@ -457,6 +518,9 @@ function BoardGameScreen({
   revealed,
   setRevealed,
   diceRolling,
+  diceSettling,
+  rollingDice,
+  previewDice,
   pointTeamIds,
   choosePointTeam,
   onRoll,
@@ -464,6 +528,8 @@ function BoardGameScreen({
   onResolve,
   onReset,
 }) {
+  const [openedQuestionKey, setOpenedQuestionKey] = useState(null);
+  const [slideAnimation, setSlideAnimation] = useState(null);
   const activeTeam = getActiveTeam(game);
   const landedSpace = game.pendingSpace && {
     ...game.pendingSpace,
@@ -489,35 +555,61 @@ function BoardGameScreen({
         : {}),
     questionPoolExhausted: game.questionPoolExhausted,
   };
-  const questionCircles = game.board.spaces.filter(
-    (space) => space.type === "question",
-  );
   const routeLinks = game.board.spaces.filter((space) => space.transport);
+  const isQuestionLanding = landedSpace?.type === "question";
+  const isSpecialLanding = Boolean(landedSpace?.transport || landedSpace?.type === "event");
+  const questionKey = isQuestionLanding ? `${game.turn}:${landedSpace.id}` : null;
+  const questionIsOpen = questionKey !== null && openedQuestionKey === questionKey;
+
+  useEffect(() => {
+    if (!slideAnimation) return undefined;
+    const timeout = window.setTimeout(() => setSlideAnimation(null), 1550);
+    return () => window.clearTimeout(timeout);
+  }, [slideAnimation]);
+
+  function resolveSpecialLanding() {
+    if (landedSpace?.transport?.type === "slide" && activeTeam) {
+      setSlideAnimation({ spaceId: landedSpace.id, teamId: activeTeam.id, color: activeTeam.color });
+    }
+    onResolve(0);
+  }
+
+  function proceedToQuestion() {
+    setOpenedQuestionKey(questionKey);
+    setTimeout(() => {
+      const turnBox = document.querySelector(".turn-box");
+      if (!turnBox) return;
+      const top = turnBox.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, Math.max(0, top - 16));
+    }, 80);
+  }
 
   return (
     <main className="app-shell board-screen">
       <Header onBack={onReset} />
-      <div className="board-heading">
-        <div>
-          <p className="eyebrow">Sacred Journey · Turn {game.turn}</p>
-          <h1>{game.board.title}</h1>
-        </div>
-        <div className="turn-display">
-          <span className={`team-token ${activeTeam?.color}`}>
-            {activeTeam?.id}
+      <div className="board-toolbar">
+        <button
+          className="roll-corner-control"
+          onClick={game.status === "rolled" ? onMove : onRoll}
+          disabled={diceRolling || diceSettling || game.status === "landed"}
+          type="button"
+        >
+          <span className="roll-team-identity">
+            <i className={`team-token ${activeTeam?.color}`}>{activeTeam?.id}</i>
+            <span><small>NOW PLAYING</small><strong>{activeTeam?.label}</strong></span>
           </span>
-          <div>
-            <small>Now playing</small>
-            <strong>{activeTeam?.label}</strong>
-          </div>
-        </div>
+          <span className="roll-action-copy">
+            <strong>{game.status === "landed" ? `Team ${activeTeam?.id} · stopped` : game.status === "rolled" ? diceSettling ? `Rolled ${game.roll}` : `Move Team ${activeTeam?.id}` : "Roll dice"}</strong>
+            <small>{game.status === "rolled" ? `${game.roll} spaces` : game.status === "landed" ? "Team turn in progress" : activeTeam?.name}</small>
+          </span>
+          <span className="corner-dice" aria-hidden="true">
+            {(diceRolling ? rollingDice : game.dice || previewDice).map((value, index) => (
+              <i key={index}>{value}</i>
+            ))}
+          </span>
+        </button>
       </div>
       <section className="tabletop">
-        <div className="board-meta">
-          <span>{questionCircles.length} question circles</span>
-          <span>6 path spaces between circles</span>
-          <span>One gain and one loss in every gap</span>
-        </div>
         <div className="board-path">
           <svg
             className="board-track"
@@ -527,31 +619,81 @@ function BoardGameScreen({
           >
             <path className="track-outline" d={boardTrackPath} />
             <path className="track-ribbon" d={boardTrackPath} />
-            {routeLinks.map((space) => {
+            {routeLinks.map((space, routeIndex) => {
               const start = boardRoutePoints[space.position];
               const end = boardRoutePoints[space.transport.destination];
+              const [controlOne, controlTwo] = space.transport.controls;
+              const startPoint = { x: start.x * 10, y: start.y * 6.2 };
+              const endPoint = { x: end.x * 10, y: end.y * 6.2 };
+              const routePath = createConnectorPath(space);
+              const slideIndex = routeLinks.slice(0, routeIndex).filter((route) => route.transport.type === "slide").length;
+              const bridgePlanks = [0.16, 0.32, 0.48, 0.64, 0.8].map((progress) => {
+                const inverse = 1 - progress;
+                const point = {
+                  x: inverse ** 3 * startPoint.x + 3 * inverse ** 2 * progress * controlOne[0] + 3 * inverse * progress ** 2 * controlTwo[0] + progress ** 3 * endPoint.x,
+                  y: inverse ** 3 * startPoint.y + 3 * inverse ** 2 * progress * controlOne[1] + 3 * inverse * progress ** 2 * controlTwo[1] + progress ** 3 * endPoint.y,
+                };
+                const tangent = {
+                  x: 3 * inverse ** 2 * (controlOne[0] - startPoint.x) + 6 * inverse * progress * (controlTwo[0] - controlOne[0]) + 3 * progress ** 2 * (endPoint.x - controlTwo[0]),
+                  y: 3 * inverse ** 2 * (controlOne[1] - startPoint.y) + 6 * inverse * progress * (controlTwo[1] - controlOne[1]) + 3 * progress ** 2 * (endPoint.y - controlTwo[1]),
+                };
+                const length = Math.hypot(tangent.x, tangent.y) || 1;
+                const normal = { x: -tangent.y / length * 7, y: tangent.x / length * 7 };
+                return { x1: point.x - normal.x, y1: point.y - normal.y, x2: point.x + normal.x, y2: point.y + normal.y };
+              });
+
               return (
                 <g key={space.id}>
-                  <line
-                    className={`route-link ${space.transport.type}`}
-                    x1={start.x * 10}
-                    y1={start.y * 6.2}
-                    x2={end.x * 10}
-                    y2={end.y * 6.2}
-                  />
+                  {space.transport.type === "bridge" ? (
+                    <>
+                      <path className="bridge-shadow" d={routePath} />
+                      <path className="bridge-deck" d={routePath} />
+                      {bridgePlanks.map((plank, index) => <line className="bridge-plank" key={index} {...plank} />)}
+                    </>
+                  ) : (
+                    <>
+                      <path className="slide-outline" d={routePath} />
+                      <path className="slide-bed" d={routePath} style={{ stroke: slideColors[slideIndex] }} />
+                    </>
+                  )}
                   <rect
                     className={`route-landing ${space.transport.type}`}
-                    x={end.x * 10 - 6}
-                    y={end.y * 6.2 - 6}
+                    x={endPoint.x - 6}
+                    y={endPoint.y - 6}
                     width="12"
                     height="12"
                     rx={space.transport.type === "bridge" ? "1" : "0"}
-                    transform={space.transport.type === "slide" ? `rotate(45 ${end.x * 10} ${end.y * 6.2})` : undefined}
+                    transform={space.transport.type === "slide" ? `rotate(45 ${endPoint.x} ${endPoint.y})` : undefined}
                   />
                 </g>
               );
             })}
           </svg>
+          {game.status === "rolled" && (
+            <div className={`board-dice-overlay ${diceRolling ? "rolling" : ""}`} aria-label={`Dice show ${game.dice?.[0]} and ${game.dice?.[1]}, total ${game.roll}`}>
+              <span className="dice-overlay-title">{diceRolling ? "ROLLING" : "ROLL TOTAL"}</span>
+              <div className={`dice-pair ${diceRolling ? "rolling" : ""}`}>
+                {(diceRolling ? rollingDice || game.dice : game.dice).map((value, index) => <span className="die-face" key={index}>{value}</span>)}
+              </div>
+              <strong>{game.roll}</strong>
+            </div>
+          )}
+          {isSpecialLanding && (
+            <div className="board-dice-overlay landing-result-overlay">
+              <span className="dice-overlay-title">{landedSpace.type === "event" ? "PATH EVENT" : "PATH LINK"}</span>
+              <strong>{landedSpace.type === "event" ? landedSpace.event.title : `${landedSpace.transport.type === "bridge" ? "Bridge" : "Slide"}!`}</strong>
+              <p>{landedSpace.type === "event" ? landedSpace.event.text : `${landedSpace.transport.type === "bridge" ? "Cross the bridge" : "Take the slide"} to space ${landedSpace.transport.destination}.`}</p>
+              {landedSpace.type === "event" && <span className={`event-outcome-note ${landedSpace.event.points < 0 ? "negative" : "positive"}`}>{landedSpace.event.points > 0 ? "+" : ""}{landedSpace.event.points} points</span>}
+              <button className="primary-button" onClick={resolveSpecialLanding} type="button">End turn</button>
+            </div>
+          )}
+          {isQuestionLanding && !questionIsOpen && (
+            <div className="board-dice-overlay question-intro-overlay">
+              <span className="dice-overlay-title">QUESTION CIRCLE · +10 POINTS</span>
+              <strong>{landedSpace.label}</strong>
+              <button className="primary-button" onClick={proceedToQuestion} type="button">Proceed to question</button>
+            </div>
+          )}
           {game.board.spaces.map((space) => (
             space.type === "path" || space.type === "event" ? (
               <PathSpaceMarker
@@ -559,6 +701,7 @@ function BoardGameScreen({
                 space={space}
                 position={boardRoutePoints[space.position]}
                 teams={game.teams}
+                hiddenTeamId={slideAnimation?.teamId}
               />
             ) : (
               <BoardSpace
@@ -567,81 +710,79 @@ function BoardGameScreen({
                 teams={game.teams}
                 position={boardRoutePoints[space.position]}
                 isPending={landedSpace?.id === space.id}
+                hiddenTeamId={slideAnimation?.teamId}
               />
             )
           ))}
+          {slideAnimation && (() => {
+            const slideSpace = routeLinks.find((space) => space.id === slideAnimation.spaceId);
+            if (!slideSpace) return null;
+            return (
+              <svg className="slide-animation-layer" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
+                <g>
+                  <foreignObject x="-18" y="-21" width="36" height="42">
+                    <div xmlns="http://www.w3.org/1999/xhtml" className="slide-rider">
+                      <i className={`team-token slide-rider-token ${slideAnimation.color}`}>{slideAnimation.teamId}</i>
+                    </div>
+                  </foreignObject>
+                  <animateMotion dur="1450ms" path={createConnectorPath(slideSpace)} fill="freeze" />
+                </g>
+              </svg>
+            );
+          })()}
         </div>
         <div className="board-deck-row">
-          <div className="route-key">
-            <span><i className="bridge-key">B</i> Bridge</span>
-            <span><i className="slide-key">S</i> Slide</span>
-            <span><i className="event-key">±</i> Event</span>
-            <small>Events resolve during movement; circles pause for questions.</small>
-          </div>
+          <aside className="point-key" aria-label="Scoring rules">
+            <span className="point-key-heading">POINTS</span>
+            <div><strong>+10</strong><span>Land on circle</span></div>
+            <div><strong>+15</strong><span>Correct answer</span></div>
+            <div><strong>+5 / +10</strong><span>Good event</span></div>
+            <div><strong>−5 / −10</strong><span>Bad event</span></div>
+            <div className="winning-points"><strong>+30</strong><span>Finish first / same round</span></div>
+          </aside>
+          <section className={`turn-panel turn-box ${questionIsOpen ? "question-open" : ""}`}>
+            <div className="turn-panel-top">
+              <span className="space-type">{landedSpace ? spaceTypeLabels[landedSpace.type] : `Turn ${game.turn}`}</span>
+              <span>Team {activeTeam?.id} · {activeTeam?.name}</span>
+            </div>
+            {!landedSpace && <p className="turn-summary">{game.status === "rolled" ? `Dice total ${game.roll}. Move your piece from the top-right control.` : `Roll both dice for ${activeTeam?.label}.`}</p>}
+            {isQuestionLanding && !questionIsOpen && <p className="turn-summary">Your team reached a question circle. Choose Proceed to question on the board.</p>}
+            {landedSpace && !isSpecialLanding && (!isQuestionLanding || questionIsOpen) && (
+              <LandedSpace
+                space={landedSpace}
+                remainingMove={game.remainingMove}
+                selectedChoice={selectedChoice}
+                setSelectedChoice={setSelectedChoice}
+                revealed={revealed}
+                setRevealed={setRevealed}
+                pointTeamIds={pointTeamIds}
+                choosePointTeam={choosePointTeam}
+                onResolve={onResolve}
+              />
+            )}
+          </section>
           <div className="team-score-strip">
             {game.teams.map((team) => (
               <div
                 className={team.id === activeTeam?.id ? "active" : ""}
                 key={team.id}
               >
-                <i className={`team-token ${team.color}`}>{team.id}</i>
-                <span>{team.label}</span>
-                <strong>{team.points}</strong>
+                <span className="team-score-identity">
+                  <i className={`team-token ${team.color}`}>{team.id}</i>
+                  <span>{team.label}</span>
+                </span>
+                <span className="team-points"><strong>{team.points}</strong><small>PTS</small></span>
               </div>
             ))}
           </div>
         </div>
       </section>
-      <section className="turn-panel">
-        <div className="turn-panel-top">
-          <span className="space-type">
-            {landedSpace ? spaceTypeLabels[landedSpace.type] : "Your turn"}
-          </span>
-          <span>
-            Team {activeTeam?.id} · {activeTeam?.name}
-          </span>
-        </div>
-        {!landedSpace && (
-          <>
-            <h2>{game.status === "rolled" ? `Total: ${game.roll}` : `Roll for ${activeTeam?.label}.`}</h2>
-            <p>Roll both dice, add them together, then move that many spaces.</p>
-            <div className={`dice-pair ${diceRolling ? "rolling" : ""}`} aria-label={game.dice ? `Dice show ${game.dice[0]} and ${game.dice[1]}` : "Two dice ready to roll"}>
-              {(game.dice || [null, null]).map((value, index) => (
-                <span className="die-face" key={index}>{value ?? "?"}</span>
-              ))}
-            </div>
-            <button
-              className="dice-button"
-              onClick={game.status === "rolled" ? onMove : onRoll}
-              disabled={diceRolling}
-              type="button"
-            >
-              <span className="die-total">{game.status === "rolled" ? game.roll : "2–12"}</span>
-              <strong>{game.status === "rolled" ? "Move piece" : "Roll two dice"}</strong>
-              <small>{game.status === "rolled" ? "Total spaces" : "Two six-sided dice"}</small>
-            </button>
-          </>
-        )}
-        {landedSpace && (
-          <LandedSpace
-            space={landedSpace}
-            remainingMove={game.remainingMove}
-            selectedChoice={selectedChoice}
-            setSelectedChoice={setSelectedChoice}
-            revealed={revealed}
-            setRevealed={setRevealed}
-            pointTeamIds={pointTeamIds}
-            choosePointTeam={choosePointTeam}
-            onResolve={onResolve}
-          />
-        )}
-      </section>
     </main>
   );
 }
 
-function BoardSpace({ space, teams, position, isPending }) {
-  const pieces = teams.filter((team) => team.position === space.position);
+function BoardSpace({ space, teams, position, isPending, hiddenTeamId }) {
+  const pieces = teams.filter((team) => team.position === space.position && team.id !== hiddenTeamId);
   const label = boardNodeLabels[space.id] || space.label;
   const shouldAlignLeft = space.id === "prompting" || label.split(/\s+/).some((word) => word.length >= 8);
   return (
@@ -664,8 +805,8 @@ function BoardSpace({ space, teams, position, isPending }) {
   );
 }
 
-function PathSpaceMarker({ space, position, teams }) {
-  const pieces = teams.filter((team) => team.position === space.position);
+function PathSpaceMarker({ space, position, teams, hiddenTeamId }) {
+  const pieces = teams.filter((team) => team.position === space.position && team.id !== hiddenTeamId);
   const gapStep = space.position % (spacesBetweenCircles + 1);
   const hasMarker = space.transport || space.event || pieces.length > 0;
   const before = boardRoutePoints[space.position - 1];
@@ -763,7 +904,7 @@ function LandedSpace({
       )}
       {space.type === "finish" && (
         <p className="circle-score-note">
-          Finish-round bonus: 20 points for the first finisher and any team that finishes this round.
+          Finish bonus +30 for the first finisher and any team that finishes this round.
         </p>
       )}
       {space.magazineArticle && (
@@ -890,24 +1031,48 @@ function LandedSpace({
 }
 
 function CompleteScreen({ game, onRestart, onMenu }) {
+  const standings = [...game.teams].sort((teamA, teamB) => teamB.points - teamA.points || teamA.id - teamB.id);
+  const confettiColors = ["#d44e38", "#145846", "#4d9daa", "#f0c94e", "#866571"];
+
   return (
     <main className="app-shell complete-screen">
       <Header onBack={onMenu} />
+      <div className="celebration-confetti" aria-hidden="true">
+        {Array.from({ length: 18 }, (_, index) => (
+          <i
+            key={index}
+            style={{
+              "--confetti-x": `${(index * 37) % 100}%`,
+              "--confetti-delay": `${(index % 6) * 90}ms`,
+              "--confetti-color": confettiColors[index % confettiColors.length],
+              "--confetti-drift": `${((index % 3) - 1) * 38}px`,
+            }}
+          />
+        ))}
+      </div>
       <section className="complete-card">
-        <p className="eyebrow">The board has a winner</p>
+        <p className="eyebrow">Round {game.finishRound} complete · First to The Lookout wins</p>
         <h1>
-          {game.winner?.label} reached <em>The Lookout.</em>
+          {game.winner?.label} <em>wins.</em>
         </h1>
         <p>
-          The class played through the journey together. Celebrate the choices,
-          stories, and conversations that got every team to the table.
+          The round is complete. Final team scores are ranked below.
         </p>
-        <div className="final-scores">
-          {game.teams.map((team) => (
-            <div key={team.id}>
+        <div className="final-scores" role="list" aria-label="Final team scores">
+          {standings.map((team, index) => (
+            <div
+              className={team.id === game.winner?.id ? "winner-score" : ""}
+              key={team.id}
+              role="listitem"
+              style={{ "--score-index": index }}
+            >
+              <span className="score-rank">{String(index + 1).padStart(2, "0")}</span>
               <i className={`team-token ${team.color}`}>{team.id}</i>
-              <span>{team.label}</span>
-              <strong>{team.points}</strong>
+              <span className="score-team-name">
+                {team.label}
+                {team.id === game.winner?.id && <small>First to finish</small>}
+              </span>
+              <strong>{team.points}<small> pts</small></strong>
             </div>
           ))}
         </div>

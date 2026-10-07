@@ -22,30 +22,34 @@ const circleDefinitions = [
 ];
 
 const routeTransitions = [
-  { from: 18, to: 32, type: 'bridge' },
-  { from: 53, to: 67, type: 'bridge' },
-  { from: 74, to: 87, type: 'bridge' },
-  { from: 38, to: 11, type: 'slide' },
-  { from: 73, to: 46, type: 'slide' },
-  { from: 95, to: 66, type: 'slide' },
+  { from: 4, to: 53, type: 'bridge', controls: [[185, 475], [135, 390]] },
+  { from: 18, to: 32, type: 'bridge', controls: [[690, 475], [790, 455]] },
+  { from: 39, to: 60, type: 'bridge', controls: [[525, 350], [245, 310]] },
+  { from: 55, to: 67, type: 'bridge', controls: [[165, 305], [315, 270]] },
+  { from: 74, to: 87, type: 'bridge', controls: [[680, 190], [790, 170]] },
+  { from: 38, to: 11, type: 'slide', controls: [[620, 450], [500, 495]] },
+  { from: 25, to: 39, type: 'slide', controls: [[820, 455], [700, 415]] },
+  { from: 73, to: 46, type: 'slide', controls: [[600, 300], [445, 350]] },
+  { from: 95, to: 66, type: 'slide', controls: [[510, 155], [410, 205]] },
+  { from: 102, to: 81, type: 'slide', controls: [[330, 165], [790, 150]] },
 ];
 
 const pathEventPairs = [
-  [{ title: 'Movement Boost', text: 'You went for a run and cared for your body.', points: 20 }, { title: 'Alcohol Choice', text: 'You chose to drink alcohol.', points: -50 }],
-  [{ title: 'Rest and Recovery', text: 'You made time for sleep and recovery.', points: 15 }, { title: 'Ignored an Injury', text: 'You ignored an injury instead of getting help.', points: -35 }],
-  [{ title: 'Water Break', text: 'You brought water and took a break during activity.', points: 10 }, { title: 'Skipped Rest', text: 'You stayed up late and skipped the rest your body needed.', points: -20 }],
-  [{ title: 'Safe Choice', text: 'You paused and chose the safer option with friends.', points: 25 }, { title: 'Unsafe Dare', text: 'You followed a dare that put your body at risk.', points: -45 }],
-  [{ title: 'Asked for Help', text: 'You asked a trusted adult for support when you needed it.', points: 15 }, { title: 'Kept It Hidden', text: 'You hid a problem instead of asking someone trustworthy for help.', points: -25 }],
-  [{ title: 'Stretch and Reset', text: 'You took a short break and listened to what your body needed.', points: 10 }, { title: 'Pushed Too Hard', text: 'You kept exercising after your body signaled it needed a rest.', points: -30 }],
-  [{ title: 'Team Movement', text: 'You invited a friend to join a fun, active game.', points: 20 }, { title: 'Cruel Comparison', text: 'You compared your body harshly with someone else’s.', points: -15 }],
-  [{ title: 'Nourishing Meal', text: 'You made time for a meal that helped you feel cared for.', points: 15 }, { title: 'Missed a Meal', text: 'You skipped a meal to meet an unrealistic appearance goal.', points: -40 }],
-  [{ title: 'Fresh Air', text: 'You took a walk outside and gave yourself a screen break.', points: 10 }, { title: 'No Break', text: 'You ignored your need for a screen break and sleep.', points: -20 }],
-  [{ title: 'Safety First', text: 'You used the right safety gear before an activity.', points: 25 }, { title: 'Skipped Safety', text: 'You skipped safety gear to save time.', points: -35 }],
-  [{ title: 'Supportive Friend', text: 'You checked in with a friend and listened without judgment.', points: 20 }, { title: 'Body Joke', text: 'You made a joke about someone’s body that hurt their feelings.', points: -25 }],
-  [{ title: 'Good Sleep Plan', text: 'You put your phone away and made time for sleep.', points: 20 }, { title: 'Late Night Scroll', text: 'You stayed up scrolling and felt worn out the next day.', points: -15 }],
-  [{ title: 'Gratitude', text: 'You noticed something your body helped you do today.', points: 15 }, { title: 'Self-Criticism', text: 'You spoke harshly to yourself about your appearance.', points: -20 }],
-  [{ title: 'Healthy Boundary', text: 'You set a boundary when a situation did not feel safe.', points: 10 }, { title: 'Ignored a Boundary', text: 'You ignored your own discomfort to fit in.', points: -30 }],
-  [{ title: 'Steady Practice', text: 'You practiced a skill patiently and celebrated your progress.', points: 20 }, { title: 'Overtraining', text: 'You kept going despite exhaustion and warning signs.', points: -40 }],
+  [{ title: 'Movement Boost', text: 'You went for a run and cared for your body.', points: 10 }, { title: 'Alcohol Choice', text: 'You chose to drink alcohol.', points: -10 }],
+  [{ title: 'Rest and Recovery', text: 'You made time for sleep and recovery.', points: 5 }, { title: 'Ignored an Injury', text: 'You ignored an injury instead of getting help.', points: -5 }],
+  [{ title: 'Water Break', text: 'You brought water and took a break during activity.', points: 5 }, { title: 'Skipped Rest', text: 'You stayed up late and skipped the rest your body needed.', points: -5 }],
+  [{ title: 'Safe Choice', text: 'You paused and chose the safer option with friends.', points: 10 }, { title: 'Unsafe Dare', text: 'You followed a dare that put your body at risk.', points: -10 }],
+  [{ title: 'Asked for Help', text: 'You asked a trusted adult for support when you needed it.', points: 5 }, { title: 'Kept It Hidden', text: 'You hid a problem instead of asking someone trustworthy for help.', points: -5 }],
+  [{ title: 'Stretch and Reset', text: 'You took a short break and listened to what your body needed.', points: 5 }, { title: 'Pushed Too Hard', text: 'You kept exercising after your body signaled it needed a rest.', points: -10 }],
+  [{ title: 'Team Movement', text: 'You invited a friend to join a fun, active game.', points: 10 }, { title: 'Cruel Comparison', text: 'You compared your body harshly with someone else’s.', points: -5 }],
+  [{ title: 'Nourishing Meal', text: 'You made time for a meal that helped you feel cared for.', points: 5 }, { title: 'Missed a Meal', text: 'You skipped a meal to meet an unrealistic appearance goal.', points: -10 }],
+  [{ title: 'Fresh Air', text: 'You took a walk outside and gave yourself a screen break.', points: 5 }, { title: 'No Break', text: 'You ignored your need for a screen break and sleep.', points: -5 }],
+  [{ title: 'Safety First', text: 'You used the right safety gear before an activity.', points: 10 }, { title: 'Skipped Safety', text: 'You skipped safety gear to save time.', points: -10 }],
+  [{ title: 'Supportive Friend', text: 'You checked in with a friend and listened without judgment.', points: 10 }, { title: 'Body Joke', text: 'You made a joke about someone’s body that hurt their feelings.', points: -5 }],
+  [{ title: 'Good Sleep Plan', text: 'You put your phone away and made time for sleep.', points: 10 }, { title: 'Late Night Scroll', text: 'You stayed up scrolling and felt worn out the next day.', points: -5 }],
+  [{ title: 'Gratitude', text: 'You noticed something your body helped you do today.', points: 5 }, { title: 'Self-Criticism', text: 'You spoke harshly to yourself about your appearance.', points: -5 }],
+  [{ title: 'Healthy Boundary', text: 'You set a boundary when a situation did not feel safe.', points: 5 }, { title: 'Ignored a Boundary', text: 'You ignored your own discomfort to fit in.', points: -10 }],
+  [{ title: 'Steady Practice', text: 'You practiced a skill patiently and celebrated your progress.', points: 10 }, { title: 'Overtraining', text: 'You kept going despite exhaustion and warning signs.', points: -10 }],
 ];
 
 const pathEvents = new Map();
@@ -86,7 +90,7 @@ function createTrackSpaces() {
       label: `Space ${position}`,
       type: event ? 'event' : 'path',
       position,
-      transport: transition ? { type: transition.type, destination: transition.to } : null,
+      transport: transition ? { type: transition.type, destination: transition.to, controls: transition.controls } : null,
       event,
     };
   });

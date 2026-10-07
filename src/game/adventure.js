@@ -71,9 +71,24 @@ export function startGame(state) {
   return { ...state, status: 'playing', eventLog: [...state.eventLog, { type: 'game_started' }] };
 }
 
-export function rollDice(state, random = Math.random) {
+export function rollRandomDie() {
+  const cryptoSource = globalThis.crypto;
+  if (!cryptoSource?.getRandomValues) return Math.floor(Math.random() * 6) + 1;
+
+  const range = 0x100000000;
+  const limit = range - range % 6;
+  const value = new Uint32Array(1);
+  do {
+    cryptoSource.getRandomValues(value);
+  } while (value[0] >= limit);
+  return value[0] % 6 + 1;
+}
+
+export function rollDice(state, random = null) {
   if ((state.status !== 'playing' && state.status !== 'turn_ready') || state.pendingSpace) return state;
-  const dice = [Math.floor(random() * 6) + 1, Math.floor(random() * 6) + 1];
+  const dice = random
+    ? [Math.floor(random() * 6) + 1, Math.floor(random() * 6) + 1]
+    : [rollRandomDie(), rollRandomDie()];
   const roll = dice[0] + dice[1];
   return { ...state, dice, roll, status: 'rolled', eventLog: [...state.eventLog, { type: 'dice_rolled', teamId: getActiveTeam(state)?.id, dice, roll }] };
 }
@@ -216,7 +231,7 @@ export function resolveSpace(state, { choiceIndex = null, bonus = 0 } = {}) {
     const qualifiesForFinishPoints = round === finishRound && !state.finishers.includes(activeTeam.id);
     const finishers = qualifiesForFinishPoints ? [...state.finishers, activeTeam.id] : state.finishers;
     const scoredState = qualifiesForFinishPoints
-      ? awardPoints(clearedState, [activeTeam.id], 20)
+      ? awardPoints(clearedState, [activeTeam.id], 30)
       : clearedState;
     return finishTurn({
       ...scoredState,
