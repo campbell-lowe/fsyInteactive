@@ -1,6 +1,7 @@
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { octoberBoard, spaceTypeLabels } from "./data/boards";
+import { additionalSources, octoberLesson, octoberMagazineIssue, octoberWeeklyGuides, scriptureSources } from "./data/lessons";
 import {
   awardPoints,
   clampTeamCount,
@@ -164,6 +165,8 @@ function createConnectorPath(space) {
 
 function App() {
   const [phase, setPhase] = useState("menu");
+  const [selectedWeeklyGuide, setSelectedWeeklyGuide] = useState(null);
+  const [weeklyJournalEntries, setWeeklyJournalEntries] = useState({});
   const [participants, setParticipants] = useState(12);
   const [teamCount, setTeamCount] = useState(suggestTeamCount(12));
   const [teamPieceIds, setTeamPieceIds] = useState(() => createTeams(4).map((team) => team.color));
@@ -183,6 +186,11 @@ function App() {
     const count = Math.max(0, Number(value) || 0);
     setParticipants(count);
     setTeamCount(suggestTeamCount(count));
+  }
+
+  function openWeeklyDive(guide) {
+    setSelectedWeeklyGuide(guide);
+    setPhase("weeklyDive");
   }
 
   function beginGame() {
@@ -282,7 +290,7 @@ function App() {
     );
   }
 
-  if (phase === "menu") return <MenuScreen onStart={() => setPhase("setup")} />;
+  if (phase === "menu") return <MenuScreen onStart={() => setPhase("setup")} onLesson={() => setPhase("lesson")} onWeekly={() => setPhase("weekly")} />;
   if (phase === "setup")
     return (
       <SetupScreen
@@ -296,6 +304,18 @@ function App() {
         onStart={beginGame}
       />
     );
+  if (phase === "lesson") return <LessonGuideScreen onBack={() => setPhase("menu")} />;
+  if (phase === "weekly") return <WeeklyLessonGuideScreen onBack={() => setPhase("menu")} onDive={openWeeklyDive} />;
+  if (phase === "weeklyDive" && selectedWeeklyGuide) {
+    return (
+      <WeeklyLessonDiveScreen
+        guide={selectedWeeklyGuide}
+        journalEntries={weeklyJournalEntries}
+        setJournalEntries={setWeeklyJournalEntries}
+        onBack={() => setPhase("weekly")}
+      />
+    );
+  }
   if (phase === "complete")
     return (
       <CompleteScreen
@@ -340,7 +360,45 @@ function Header({ onBack }) {
   );
 }
 
-function MenuScreen({ onStart }) {
+const octoberSundayLessons = [
+  {
+    guideId: "fastSunday",
+    week: "FAST SUNDAY",
+    title: "1. Study the chapter from the FSY guide",
+    description: "Study helps for the first Sunday in October.",
+    url: "https://www.churchofjesuschrist.org/study/ftsoy/2026/10/fsy-lessons/01-fast-sunday?lang=eng",
+  },
+  {
+    guideId: "secondSunday",
+    week: "SECOND SUNDAY",
+    title: "2. Learn more about the Word of Wisdom",
+    description: "Study helps for the second Sunday in October.",
+    url: "https://www.churchofjesuschrist.org/study/ftsoy/2026/10/fsy-lessons/02-second-sunday?lang=eng",
+  },
+  {
+    guideId: "thirdSunday",
+    week: "THIRD SUNDAY",
+    title: "3. Learn more about the law of chastity",
+    description: "Study helps for the third Sunday in October.",
+    url: "https://www.churchofjesuschrist.org/study/ftsoy/2026/10/fsy-lessons/03-third-sunday?lang=eng",
+  },
+  {
+    guideId: "fourthSundayYoungWomen",
+    week: "LAST SUNDAY · YOUNG WOMEN",
+    title: "4. Becoming a covenant daughter of God",
+    description: "Study helps for Young Women classes on the fourth Sunday in October.",
+    url: "https://www.churchofjesuschrist.org/study/ftsoy/2026/10/fsy-lessons/04a-fourth-sunday?lang=eng",
+  },
+  {
+    guideId: "fourthSundayAaronicQuorums",
+    week: "LAST SUNDAY · AARONIC PRIESTHOOD QUORUMS",
+    title: "4. Becoming a covenant son of God",
+    description: "Study helps for Aaronic Priesthood quorums on the fourth Sunday in October.",
+    url: "https://www.churchofjesuschrist.org/study/ftsoy/2026/10/fsy-lessons/04b-fourth-sunday?lang=eng",
+  },
+];
+
+function MenuScreen({ onStart, onLesson, onWeekly }) {
   return (
     <main className="app-shell menu-screen">
       <Header onBack={() => {}} />
@@ -348,15 +406,23 @@ function MenuScreen({ onStart }) {
         <div>
           <p className="eyebrow">A shared tabletop experience</p>
           <h1>
-            Gather around the <em>board.</em>
+            Your Body Is <em>Sacred.</em>
           </h1>
           <p>
-            One screen. Temporary team pieces. A journey through the October FSY
-            topic through questions, team choices, bridges, and slides.
+            Explore identity, care, respect, and wise choices through a team
+            adventure based on this month’s For the Strength of Youth lesson.
           </p>
+          <figure className="menu-quote">
+            <blockquote>“Your body is an amazing gift from your Heavenly Father.”</blockquote>
+            <figcaption>
+              <a href="https://www.churchofjesuschrist.org/study/manual/for-the-strength-of-youth/10-your-body-is-sacred?lang=eng" target="_blank" rel="noreferrer">
+                For the Strength of Youth · Your Body Is Sacred ↗
+              </a>
+            </figcaption>
+          </figure>
         </div>
         <div className="menu-die" aria-hidden="true">
-          6
+          10
         </div>
       </section>
       <section className="mode-section">
@@ -368,23 +434,387 @@ function MenuScreen({ onStart }) {
             type="button"
           >
             <span>01 · Ready to play</span>
-            <strong>Sacred Journey</strong>
+            <strong>Sacred Body Quest</strong>
             <p>
               Roll both dice, answer questions at the circles, and cross bridges or slides on the way to The Lookout.
             </p>
             <b>Play board game →</b>
           </button>
-          <div className="mode-card muted">
-            <span>02 · Coming next</span>
-            <strong>Sacred Puzzle</strong>
-                  : 0.25 + ((step - 1) / 5) * 0.5;
-          </div>
-          <div className="mode-card muted">
-            <span>03 · Explore anytime</span>
-            <strong>Lesson Guide</strong>
-            <p>Deep-dive into the October lesson and its resources.</p>
-          </div>
+          <button
+            className="mode-card weekly-entry"
+            onClick={onWeekly}
+            type="button"
+          >
+            <span>02 · Prepare for Sunday</span>
+            <strong>Weekly Lesson Guide</strong>
+            <p>Find October’s official Sunday lessons and class-specific guidance.</p>
+            <b>View weekly lessons →</b>
+          </button>
+          <button
+            className="mode-card lesson-entry"
+            onClick={onLesson}
+            type="button"
+          >
+            <span>03 · Study together</span>
+            <strong>Diving Into the Lesson</strong>
+            <p>Follow the lesson’s ideas, read scripture, and pause for discussion.</p>
+            <b>Begin lesson →</b>
+          </button>
         </div>
+      </section>
+    </main>
+  );
+}
+
+function WeeklyLessonGuideScreen({ onBack, onDive }) {
+  return (
+    <main className="app-shell weekly-screen">
+      <Header onBack={onBack} />
+      <section className="weekly-guide">
+        <button className="text-button" onClick={onBack} type="button">← Back to home</button>
+        <section className="weekly-hero">
+          <div>
+            <p className="eyebrow">FOR THE STRENGTH OF YOUTH · OCTOBER 2026</p>
+            <h1>Weekly Lesson <em>Guidance.</em></h1>
+            <p>October’s theme is <strong>Your Body Is Sacred.</strong> Choose the Sunday lesson that matches your class.</p>
+          </div>
+          <img
+            src="https://www.churchofjesuschrist.org/imgs/2fcmyh64970uaj37yqbs4nui4wsbm7x4xn27ib85/full/%21500%2C/0/default"
+            alt="Your Body Is Sacred, October youth lesson artwork"
+          />
+        </section>
+        <article className="weekly-overview">
+          <div>
+            <p className="eyebrow">OCTOBER INTRODUCTION</p>
+            <h2>Your Body Is Sacred</h2>
+            <p>Introduction to the youth lessons for October 2026.</p>
+          </div>
+          <div className="weekly-actions">
+            <a href={octoberWeeklyGuides.introduction.url} target="_blank" rel="noreferrer">Open lesson ↗</a>
+            <button className="weekly-dive-button" onClick={() => onDive(octoberWeeklyGuides.introduction)} type="button">Dive deeper</button>
+          </div>
+        </article>
+        <section className="weekly-schedule" aria-label="October Sunday lessons">
+          <p className="eyebrow">SUNDAY LESSONS</p>
+          {octoberSundayLessons.map((lesson) => (
+            <article className="weekly-lesson-row" key={lesson.url}>
+              <p className="weekly-lesson-week">{lesson.week}</p>
+              <div>
+                <h2>{lesson.title}</h2>
+                <p>{lesson.description}</p>
+              </div>
+              <div className="weekly-actions">
+                <a href={lesson.url} target="_blank" rel="noreferrer">Open lesson ↗</a>
+                <button className="weekly-dive-button" onClick={() => onDive(octoberWeeklyGuides[lesson.guideId])} type="button">Dive deeper</button>
+              </div>
+            </article>
+          ))}
+        </section>
+      </section>
+    </main>
+  );
+}
+
+function WeeklyLessonDiveScreen({ guide, journalEntries, setJournalEntries, onBack }) {
+  return (
+    <main className="app-shell weekly-screen">
+      <Header onBack={onBack} />
+      <section className="weekly-dive-guide">
+        <button className="text-button" onClick={onBack} type="button">← Back to October lessons</button>
+        <p className="eyebrow">{guide.week} · FOR THE STRENGTH OF YOUTH</p>
+        <h1>{guide.title}</h1>
+        <p className="weekly-dive-intro">{guide.summary}</p>
+        <figure className="weekly-dive-quote">
+          <blockquote>“{guide.quote}”</blockquote>
+          <figcaption>{guide.quoteSource}</figcaption>
+        </figure>
+        <section className="weekly-dive-scriptures">
+          <p className="eyebrow">READ THE SCRIPTURES</p>
+          {guide.scriptures.map((scripture) => (
+            <a href={scripture.url} key={scripture.reference} target="_blank" rel="noreferrer">
+              <strong>{scripture.reference}</strong><span>{scripture.title} ↗</span>
+            </a>
+          ))}
+        </section>
+        <section className="weekly-dive-journal">
+          <p className="eyebrow">YOUR JOURNAL</p>
+          <h2>What stands out to you?</h2>
+          {guide.questions.map((question, index) => {
+            const entryId = `${guide.id}-${index}`;
+            return (
+              <div className="weekly-dive-question" key={question}>
+                <label htmlFor={`weekly-entry-${entryId}`}>{question}</label>
+                <textarea
+                  id={`weekly-entry-${entryId}`}
+                  maxLength="1000"
+                  onChange={(event) => setJournalEntries((entries) => ({ ...entries, [entryId]: event.target.value }))}
+                  placeholder="A thought, a question, or something you want to remember..."
+                  rows="3"
+                  value={journalEntries[entryId] || ""}
+                />
+              </div>
+            );
+          })}
+          <p className="lesson-journal-note">Your writing stays in this tab and clears when you leave the guide.</p>
+        </section>
+        <a className="weekly-official-link" href={guide.url} target="_blank" rel="noreferrer">Open the official lesson ↗</a>
+      </section>
+    </main>
+  );
+}
+
+function LessonGuideScreen({ onBack }) {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [journalEntries, setJournalEntries] = useState({});
+  const locations = octoberLesson.locations;
+  const activeLocation = locations[stepIndex];
+  const lessonHeadings = {
+    identity: "Your worth is more than appearance.",
+    care: "Care beats criticism.",
+    respect: "Every body deserves respect.",
+    choices: "Choose what strengthens you.",
+    light: "Start with one small choice.",
+  };
+  const lessonQuestions = {
+    identity: {
+      discussion: "What messages make it easy to compare our bodies or our lives?",
+      journal: "How could remembering you are a child of God change how you respond?",
+    },
+    care: {
+      discussion: "What does caring for your body look like on a busy day?",
+      journal: "Which small habit could help you feel more cared for this week?",
+    },
+    respect: {
+      discussion: "What does respect for your own and someone else’s body look like online?",
+      journal: "What could you say or do when someone’s body becomes the punchline?",
+    },
+    choices: {
+      discussion: "What can make it hard to choose what is good for you when there is pressure?",
+      journal: "Who could help you think it through before you decide?",
+    },
+    light: {
+      discussion: "What is one thing your body lets you do that you are grateful for?",
+      journal: "What is one kind, realistic way to care for yourself this week?",
+    },
+  };
+  const magazineStories = {
+      identity: {
+        title: "God Knows and Loves You",
+        byline: "Elder Ulisses Soares",
+        summary: "Elder Soares reflects on how his testimony of God’s love deepened over time and invites youth to consider how personally God knows them.",
+        excerpt: "Your Heavenly Father has always known you. He loves you.",
+        url: "https://www.churchofjesuschrist.org/study/ftsoy/2026/10/02-god-knows-and-loves-you?lang=eng",
+      },
+      care: {
+        title: "Earning Belts and Trusting God",
+        byline: "Jessica Zoey Strong · Church Magazines",
+        summary: "Evangeline, a 17-year-old tae kwon do student, shares how prayer and family support helped her through a knee operation.",
+        excerpt: "I could feel the love of Heavenly Father and that I wasn’t alone.",
+        url: "https://www.churchofjesuschrist.org/study/ftsoy/2026/10/10-earning-belts-and-trusting-god?lang=eng",
+      },
+      choices: {
+        title: "Prompting at the Pool",
+        byline: "James S. · Youth Voices",
+        summary: "A 19-year-old lifeguard describes asking a supervisor to check on someone in trouble, and learning to trust a prompting instead of dismissing it.",
+        excerpt: "We need to stop doubting ourselves and start trusting in our abilities.",
+        url: "https://www.churchofjesuschrist.org/study/ftsoy/2026/10/05-prompting-at-the-pool?lang=eng",
+      },
+      light: {
+        title: "Becoming Your Best You",
+        byline: "Elder John D. Amos and Sister Michelle Amos",
+        summary: "Sister Amos shares how exploring school subjects helped her discover engineering, a path that later took her to NASA.",
+        excerpt: "The best thing you can do is learn all you can now.",
+        url: "https://www.churchofjesuschrist.org/study/ftsoy/2026/10/07-becoming-your-best-you?lang=eng",
+      },
+  };
+    const optionalTopics = [
+      {
+        id: "chastity",
+        title: "Chastity and personal boundaries",
+        summary: "The FSY lesson describes sexual feelings as sacred and chastity as part of God’s plan. It teaches respect for your own body and other people’s boundaries, and encourages seeking trusted support when questions or pressure come up.",
+        question: "What does respecting a boundary—your own or someone else’s—look like? Who could you ask if a question feels hard to talk about?",
+        scripture: "1 Corinthians 6:18–20",
+        scriptureUrl: "https://www.churchofjesuschrist.org/study/scriptures/nt/1-cor/6?lang=eng&id=p18-p20#p18",
+        lessonUrl: "https://www.churchofjesuschrist.org/study/manual/for-the-strength-of-youth/10-your-body-is-sacred?lang=eng",
+      },
+      {
+        id: "substances",
+        title: "Substances and getting support",
+        summary: "The lesson encourages choices that strengthen the body and cautions against substances that can harm the body or spirit. It also reminds readers to use even helpful medication correctly.",
+        question: "If you or a friend felt pressured to try something harmful, what could help you find support?",
+        scripture: "Doctrine and Covenants 89",
+        scriptureUrl: "https://www.churchofjesuschrist.org/study/scriptures/dc-testament/dc/89?lang=eng",
+        lessonUrl: "https://www.churchofjesuschrist.org/study/manual/for-the-strength-of-youth/10-your-body-is-sacred?lang=eng",
+      },
+    ];
+  const scriptureReference = {
+    identity: 'Genesis 1:27',
+    care: '1 Corinthians 6:19–20',
+    respect: '1 Corinthians 6:19–20',
+    choices: '1 Corinthians 6:19–20',
+    light: 'Doctrine and Covenants 88:15–16',
+  }[activeLocation?.id];
+  const activeScripture = scriptureSources.find((source) => source.reference === scriptureReference);
+  const activeStory = magazineStories[activeLocation?.id];
+  const isComplete = !activeLocation;
+
+  return (
+    <main className="app-shell lesson-screen">
+      <Header onBack={onBack} />
+      <section className="lesson-guide">
+        <button className="text-button" onClick={onBack} type="button">← Back to home</button>
+        <p className="eyebrow">{octoberLesson.month} {octoberLesson.moduleNumber} · For the Strength of Youth</p>
+        <h1>Diving Into <em>the Lesson.</em></h1>
+        <p className="lesson-intro">What does it mean to treat your body as a sacred gift? Read a scripture, explore one idea, and talk it through.</p>
+        <figure className="lesson-quote">
+          <blockquote>“Your body is an amazing gift from your Heavenly Father.”</blockquote>
+          <figcaption>
+            <a href="https://www.churchofjesuschrist.org/study/manual/for-the-strength-of-youth/10-your-body-is-sacred?lang=eng" target="_blank" rel="noreferrer">
+              {octoberLesson.title} · Official lesson ↗
+            </a>
+          </figcaption>
+        </figure>
+        <div className="lesson-progress">
+          <span>{isComplete ? "LESSON COMPLETE" : `TOPIC ${activeLocation.number} OF ${locations.length}`}</span>
+          <div
+            className="lesson-progress-track"
+            role="progressbar"
+            aria-label="Lesson progress"
+            aria-valuemin="0"
+            aria-valuemax={locations.length}
+            aria-valuenow={isComplete ? locations.length : stepIndex + 1}
+          >
+            <span style={{ width: `${(isComplete ? locations.length : stepIndex + 1) / locations.length * 100}%` }} />
+          </div>
+          {!isComplete && <span>{lessonHeadings[activeLocation.id]}</span>}
+        </div>
+        {activeLocation ? (
+          <article className="lesson-step" aria-live="polite">
+            <header className="lesson-step-heading">
+              <span className="lesson-step-number">{activeLocation.number}</span>
+              <div>
+                <p className="eyebrow">THE BIG IDEA</p>
+                <h2>{lessonHeadings[activeLocation.id]}</h2>
+              </div>
+            </header>
+            <p className="lesson-teaching-point">{activeLocation.reveal}</p>
+            {activeScripture && (
+              <section className="lesson-reading">
+                <p className="eyebrow">READ TOGETHER</p>
+                <a href={activeScripture.url} target="_blank" rel="noreferrer">
+                  {activeScripture.reference} · {activeScripture.title} ↗
+                </a>
+                <p>{activeScripture.note}</p>
+              </section>
+            )}
+            {activeStory && (
+              <aside className="magazine-story">
+                <p className="eyebrow">A STORY FROM THE OCTOBER ISSUE</p>
+                <h3>{activeStory.title}</h3>
+                <p>{activeStory.summary}</p>
+                <blockquote>“{activeStory.excerpt}”</blockquote>
+                <p className="magazine-story-source">
+                  {activeStory.byline} · <a href={activeStory.url} target="_blank" rel="noreferrer">Read the story ↗</a>
+                </p>
+              </aside>
+            )}
+            <section className="lesson-discussion">
+              <h3>Talk about it</h3>
+              <p>{lessonQuestions[activeLocation.id].discussion}</p>
+            </section>
+            <section className="lesson-journal">
+              <div className="lesson-journal-heading">
+                <div>
+                  <span>YOUR JOURNAL</span>
+                  <label htmlFor={`journal-${activeLocation.id}`}>{lessonQuestions[activeLocation.id].journal}</label>
+                </div>
+                <span className="lesson-journal-optional">OPTIONAL</span>
+              </div>
+              <textarea
+                id={`journal-${activeLocation.id}`}
+                maxLength="1000"
+                onChange={(event) => setJournalEntries((entries) => ({ ...entries, [activeLocation.id]: event.target.value }))}
+                placeholder="A few words, a question, or one step you might try..."
+                rows="4"
+                value={journalEntries[activeLocation.id] || ""}
+              />
+              <p className="lesson-journal-note" id={`journal-note-${activeLocation.id}`}>
+                Your writing stays in this tab and clears when you leave the guide.
+              </p>
+            </section>
+            {activeLocation.resource.label !== activeScripture?.reference && (
+              <a className="lesson-scripture" href={activeLocation.resource.url} target="_blank" rel="noreferrer">
+                Related lesson resource: {activeLocation.resource.label} ↗
+              </a>
+            )}
+          </article>
+        ) : (
+          <section className="lesson-completion" aria-live="polite">
+            <p className="eyebrow">LESSON COMPLETE</p>
+            <h2>What will you carry with you?</h2>
+            <p>Choose one idea from today to remember the sacred nature of your body and the way you care for yourself and others.</p>
+            <section className="lesson-more-topics">
+              <p className="eyebrow">OPTIONAL · READ AND REFLECT</p>
+              <h2>More topics to explore</h2>
+              <p>These sensitive topics come from the official FSY lesson. Read quietly, write only what feels useful, or skip a prompt.</p>
+              {optionalTopics.map((topic) => (
+                <details className="lesson-sensitive-topic" key={topic.id}>
+                  <summary>{topic.title}</summary>
+                  <div className="lesson-sensitive-content">
+                    <p>{topic.summary}</p>
+                    <a href={topic.scriptureUrl} target="_blank" rel="noreferrer">Read {topic.scripture} ↗</a>
+                    <a href={topic.lessonUrl} target="_blank" rel="noreferrer">Read “Your Body Is Sacred” ↗</a>
+                    <div className="lesson-journal">
+                      <div className="lesson-journal-heading">
+                        <div>
+                          <span>OPTIONAL REFLECTION</span>
+                          <label htmlFor={`journal-${topic.id}`}>{topic.question}</label>
+                        </div>
+                      </div>
+                      <textarea
+                        id={`journal-${topic.id}`}
+                        maxLength="1000"
+                        onChange={(event) => setJournalEntries((entries) => ({ ...entries, [topic.id]: event.target.value }))}
+                        placeholder="A thought, a question, or someone you could talk to..."
+                        rows="4"
+                        value={journalEntries[topic.id] || ""}
+                      />
+                      <p className="lesson-journal-note">Your writing stays in this tab and clears when you leave the guide.</p>
+                    </div>
+                  </div>
+                </details>
+              ))}
+            </section>
+            <h3>Scriptures to revisit</h3>
+            <div className="lesson-finish-sources">
+              {scriptureSources.map((source) => (
+                <a key={source.reference} href={source.url} target="_blank" rel="noreferrer">
+                  <strong>{source.reference}</strong><span>{source.title} ↗</span>
+                </a>
+              ))}
+              <a href={octoberMagazineIssue.url} target="_blank" rel="noreferrer">
+                <strong>{octoberMagazineIssue.title}</strong><span>Browse the issue ↗</span>
+              </a>
+              {additionalSources.map((source) => (
+                <a key={source.title} href={source.url} target="_blank" rel="noreferrer">
+                  <strong>{source.title}</strong><span>{source.author} · {source.type} ↗</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+        <nav className="lesson-controls" aria-label="Lesson navigation">
+          <button className="text-button" disabled={stepIndex === 0} onClick={() => setStepIndex((current) => Math.max(0, current - 1))} type="button">
+            ← Previous
+          </button>
+          {isComplete ? (
+            <button className="primary-button" onClick={() => setStepIndex(0)} type="button">Review lesson</button>
+          ) : (
+            <button className="primary-button" onClick={() => setStepIndex((current) => current + 1)} type="button">
+              {stepIndex === locations.length - 1 ? "Finish lesson" : "Next topic →"}
+            </button>
+          )}
+        </nav>
       </section>
     </main>
   );
@@ -411,7 +841,7 @@ function SetupScreen({
           <button className="text-button" onClick={onBack} type="button">
             ← Game menu
           </button>
-          <p className="eyebrow">Sacred Journey · October</p>
+          <p className="eyebrow">Sacred Body Quest · October</p>
           <h1>
             Set the <em>table.</em>
           </h1>

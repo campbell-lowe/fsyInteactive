@@ -89,6 +89,119 @@ export const octoberLesson = {
   ],
 };
 
+export const octoberWeeklyGuides = {
+  introduction: {
+    id: 'introduction',
+    week: 'October introduction',
+    title: 'Your Body Is Sacred',
+    url: 'https://www.churchofjesuschrist.org/study/ftsoy/2026/10/fsy-lessons/00-intro?lang=eng',
+    summary: 'Begin with the month’s two questions: Why does God care how you treat your body, and how can chastity and the Word of Wisdom bless you now?',
+    quote: 'Your body is an amazing gift from your Heavenly Father.',
+    quoteSource: 'For the Strength of Youth · Your Body Is Sacred',
+    scriptures: [
+      { reference: '1 Corinthians 6:18–20', title: 'Your body is a temple', url: 'https://www.churchofjesuschrist.org/study/scriptures/nt/1-cor/6?lang=eng&id=p18-p20#p18' },
+    ],
+    questions: [
+      'Why does God care how I treat my body?',
+      'How are the law of chastity and the Word of Wisdom blessing me right now?',
+    ],
+  },
+  fastSunday: {
+    id: 'fast-sunday',
+    week: 'Fast Sunday',
+    title: 'Study the chapter from the FSY guide',
+    url: 'https://www.churchofjesuschrist.org/study/ftsoy/2026/10/fsy-lessons/01-fast-sunday?lang=eng',
+    summary: 'The guide suggests choosing an eternal truth, reading a supporting scripture, sharing an experience, and choosing one invitation to try.',
+    quote: 'Choose an eternal truth to discuss.',
+    quoteSource: 'For the Strength of Youth · Fast Sunday lesson',
+    scriptures: [
+      { reference: '1 Corinthians 6:18–20', title: 'Your body is a temple', url: 'https://www.churchofjesuschrist.org/study/scriptures/nt/1-cor/6?lang=eng&id=p18-p20#p18' },
+      { reference: 'Genesis 1:27', title: 'Created in God’s image', url: 'https://www.churchofjesuschrist.org/study/scriptures/ot/gen/1?lang=eng&id=p27#p27' },
+    ],
+    questions: [
+      'Which truth from the chapter feels important to you right now?',
+      'What scripture or experience helps you understand that truth?',
+      'What is one invitation you might try this week?',
+    ],
+  },
+  secondSunday: {
+    id: 'second-sunday',
+    week: 'Second Sunday',
+    title: 'Learn more about the Word of Wisdom',
+    url: 'https://www.churchofjesuschrist.org/study/ftsoy/2026/10/fsy-lessons/02-second-sunday?lang=eng',
+    summary: 'Explore how the Word of Wisdom can guide daily choices, support physical and spiritual health, and help keep the mind clear.',
+    quote: 'A principle with promise.',
+    quoteSource: 'Doctrine and Covenants 89:3',
+    scriptures: [
+      { reference: 'Doctrine and Covenants 89', title: 'The Word of Wisdom', url: 'https://www.churchofjesuschrist.org/study/scriptures/dc-testament/dc/89?lang=eng' },
+      { reference: 'Daniel 1:15, 17–20', title: 'Daniel and his friends', url: 'https://www.churchofjesuschrist.org/study/scriptures/ot/dan/1?lang=eng&id=p15,p17-p20#p15' },
+    ],
+    questions: [
+      'What principles and promises do you notice in Doctrine and Covenants 89?',
+      'How can your daily choices help you care for your body and stay close to the Spirit?',
+      'What physical and spiritual blessings did Daniel and his friends receive?',
+    ],
+  },
+  thirdSunday: {
+    id: 'third-sunday',
+    week: 'Third Sunday',
+    title: 'Learn more about the law of chastity',
+    url: 'https://www.churchofjesuschrist.org/study/ftsoy/2026/10/fsy-lessons/03-third-sunday?lang=eng',
+    summary: 'The lesson explores chastity through thoughts, actions, boundaries, media choices, and the hope of repentance and support.',
+    quote: 'Purpose · Plan · Pause.',
+    quoteSource: 'For the Strength of Youth · Third Sunday lesson',
+    scriptures: [
+      { reference: 'Genesis 39:7–12', title: 'Joseph chooses what is right', url: 'https://www.churchofjesuschrist.org/study/scriptures/ot/gen/39?lang=eng&id=p7-p12#p7' },
+      { reference: 'Alma 39:1–15', title: 'Alma counsels Corianton', url: 'https://www.churchofjesuschrist.org/study/scriptures/bofm/alma/39?lang=eng&id=p1-p15#p1' },
+      { reference: 'Alma 42:29–31', title: 'Hope through repentance', url: 'https://www.churchofjesuschrist.org/study/scriptures/bofm/alma/42?lang=eng&id=p29-p31#p29' },
+      { reference: 'Doctrine and Covenants 112:6', title: 'Use technology with purpose', url: 'https://www.churchofjesuschrist.org/study/scriptures/dc-testament/dc/112?lang=eng&id=p6#p6' },
+      { reference: 'Alma 34:32', title: 'Plan for the choices ahead', url: 'https://www.churchofjesuschrist.org/study/scriptures/bofm/alma/34?lang=eng&id=p32#p32' },
+      { reference: 'Doctrine and Covenants 101:16', title: 'Pause and find peace', url: 'https://www.churchofjesuschrist.org/study/scriptures/dc-testament/dc/101?lang=eng&id=p16#p16' },
+    ],
+    questions: [
+      'How can media choices affect your thoughts and relationships?',
+      'What boundaries or plans could help you use technology in a way that matches your values?',
+      'Where can someone turn for help, hope, and forgiveness after a mistake?',
+    ],
+  },
+  fourthSundayYoungWomen: {
+    id: 'fourth-sunday-young-women',
+    week: 'Last Sunday · Young Women',
+    title: 'Becoming a covenant daughter of God',
+    url: 'https://www.churchofjesuschrist.org/study/ftsoy/2026/10/fsy-lessons/04a-fourth-sunday?lang=eng',
+    summary: 'Study divine identity, virtue, humility, and reverence, then reflect on how the Savior can help you keep your body sacred.',
+    quote: 'Continue in the spirit of meekness, and beware of pride.',
+    quoteSource: 'Doctrine and Covenants 25:14',
+    scriptures: [
+      { reference: 'Doctrine and Covenants 25:2, 14', title: 'Humility and virtue', url: 'https://www.churchofjesuschrist.org/study/scriptures/dc-testament/dc/25?lang=eng&id=p2,p14#p2' },
+      { reference: 'Proverbs 31:10–31', title: 'The woman of virtue', url: 'https://www.churchofjesuschrist.org/study/scriptures/ot/prov/31?lang=eng&id=p10-p31#p10' },
+    ],
+    questions: [
+      'What words or ideas about virtue do you find in Doctrine and Covenants 25?',
+      'Which description in Proverbs 31:10–31 stands out to you, and why?',
+      'How can the Savior help you show respect and reverence for yourself, others, and God?',
+    ],
+  },
+  fourthSundayAaronicQuorums: {
+    id: 'fourth-sunday-aaronic-quorums',
+    week: 'Last Sunday · Aaronic Priesthood Quorums',
+    title: 'Becoming a covenant son of God',
+    url: 'https://www.churchofjesuschrist.org/study/ftsoy/2026/10/fsy-lessons/04b-fourth-sunday?lang=eng',
+    summary: 'Study the example of the stripling warriors, then connect their courage, strength, and trustworthiness to keeping the body sacred and serving others.',
+    quote: 'True at all times in whatsoever thing they were entrusted.',
+    quoteSource: 'Alma 53:20',
+    scriptures: [
+      { reference: 'Alma 53:14–22', title: 'The stripling warriors', url: 'https://www.churchofjesuschrist.org/study/scriptures/bofm/alma/53?lang=eng&id=p14-p22#p14' },
+      { reference: 'Alma 56:44–57', title: 'Faith and courage', url: 'https://www.churchofjesuschrist.org/study/scriptures/bofm/alma/56?lang=eng&id=p44-p57#p44' },
+    ],
+    questions: [
+      'What helped the stripling warriors become “true at all times”?',
+      'Which of their attributes could help you in your responsibilities?',
+      'What connection do you see between their example and keeping your body sacred?',
+    ],
+  },
+};
+
 export const scriptureSources = [
   { reference: '1 Corinthians 6:19–20', title: 'Your body is a temple', note: 'Paul teaches that our bodies are sacred and worth honoring.', url: 'https://www.churchofjesuschrist.org/study/scriptures/nt/1-cor/6?lang=eng&id=p19-p20#p19' },
   { reference: 'Genesis 1:27', title: 'Created in God’s image', note: 'Our bodies are part of God’s intentional, divine creation.', url: 'https://www.churchofjesuschrist.org/study/scriptures/ot/gen/1?lang=eng&id=p27#p27' },
