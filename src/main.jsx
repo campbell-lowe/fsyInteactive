@@ -290,7 +290,7 @@ function App() {
     );
   }
 
-  if (phase === "menu") return <MenuScreen onStart={() => setPhase("setup")} onLesson={() => setPhase("lesson")} onWeekly={() => setPhase("weekly")} />;
+  if (phase === "menu") return <MenuScreen onStart={() => setPhase("setup")} onLesson={() => setPhase("lesson")} onWeekly={() => setPhase("weekly")} onMiniGame={() => setPhase("miniGame")} />;
   if (phase === "setup")
     return (
       <SetupScreen
@@ -316,6 +316,7 @@ function App() {
       />
     );
   }
+  if (phase === "miniGame") return <MatchTheTruthGame onBack={() => setPhase("menu")} />;
   if (phase === "complete")
     return (
       <CompleteScreen
@@ -398,19 +399,18 @@ const octoberSundayLessons = [
   },
 ];
 
-function MenuScreen({ onStart, onLesson, onWeekly }) {
+function MenuScreen({ onStart, onLesson, onWeekly, onMiniGame }) {
   return (
     <main className="app-shell menu-screen">
       <Header onBack={() => {}} />
       <section className="menu-hero">
         <div>
-          <p className="eyebrow">A shared tabletop experience</p>
+          <p className="eyebrow">OCTOBER YOUTH LESSON HUB</p>
           <h1>
             Your Body Is <em>Sacred.</em>
           </h1>
           <p>
-            Explore identity, care, respect, and wise choices through a team
-            adventure based on this month’s For the Strength of Youth lesson.
+            Play a quick lesson game, follow the Sunday guidance, or journal through this month’s For the Strength of Youth lesson.
           </p>
           <figure className="menu-quote">
             <blockquote>“Your body is an amazing gift from your Heavenly Father.”</blockquote>
@@ -425,42 +425,157 @@ function MenuScreen({ onStart, onLesson, onWeekly }) {
           10
         </div>
       </section>
-      <section className="mode-section">
-        <p className="eyebrow">Choose a way in</p>
-        <div className="mode-grid">
-          <button
-            className="mode-card selected"
-            onClick={onStart}
-            type="button"
-          >
-            <span>01 · Ready to play</span>
-            <strong>Sacred Body Quest</strong>
-            <p>
-              Roll both dice, answer questions at the circles, and cross bridges or slides on the way to The Lookout.
-            </p>
-            <b>Play board game →</b>
-          </button>
-          <button
-            className="mode-card weekly-entry"
-            onClick={onWeekly}
-            type="button"
-          >
-            <span>02 · Prepare for Sunday</span>
-            <strong>Weekly Lesson Guide</strong>
-            <p>Find October’s official Sunday lessons and class-specific guidance.</p>
-            <b>View weekly lessons →</b>
-          </button>
-          <button
-            className="mode-card lesson-entry"
-            onClick={onLesson}
-            type="button"
-          >
-            <span>03 · Study together</span>
-            <strong>Diving Into the Lesson</strong>
-            <p>Follow the lesson’s ideas, read scripture, and pause for discussion.</p>
-            <b>Begin lesson →</b>
-          </button>
+      <div className="activity-groups">
+        <section className="activity-group" aria-labelledby="games-heading">
+          <header className="activity-group-heading">
+            <p className="eyebrow">PLAY</p>
+            <h2 id="games-heading">Games</h2>
+            <p>Quick ways to explore this month’s ideas.</p>
+          </header>
+          <div className="activity-grid">
+            <button className="activity-card" onClick={onStart} type="button">
+              <span>BOARD GAME</span>
+              <strong>Sacred Body Quest</strong>
+              <p>Roll dice, answer questions, and follow the winding path to The Lookout.</p>
+              <b>Play board game →</b>
+            </button>
+            <button className="activity-card" onClick={onMiniGame} type="button">
+              <span>MEMORY MATCH</span>
+              <strong>Match the Truth</strong>
+              <p>Turn over cards and match lesson ideas with choices that support them.</p>
+              <b>Play mini game →</b>
+            </button>
+          </div>
+        </section>
+        <section className="activity-group" aria-labelledby="lessons-heading">
+          <header className="activity-group-heading">
+            <p className="eyebrow">READ & REFLECT</p>
+            <h2 id="lessons-heading">Lessons</h2>
+            <p>Official Sunday guidance and a step-by-step journal.</p>
+          </header>
+          <div className="activity-grid">
+            <button className="activity-card" onClick={onWeekly} type="button">
+              <span>FOR THE STRENGTH OF YOUTH</span>
+              <strong>Weekly Lesson Guide</strong>
+              <p>Find October’s official Sunday lessons and class-specific guidance.</p>
+              <b>View weekly lessons →</b>
+            </button>
+            <button className="activity-card" onClick={onLesson} type="button">
+              <span>GUIDED JOURNAL</span>
+              <strong>Diving Into the Lesson</strong>
+              <p>Read scripture, explore the big ideas, and write personal reflections.</p>
+              <b>Begin lesson →</b>
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+const memoryPairs = [
+  { id: "identity", cards: ["Beloved child of God", "Worth isn't based on appearance"] },
+  { id: "care", cards: ["Rest and nourishment", "Care for body and spirit"] },
+  { id: "respect", cards: ["Honor boundaries", "Protect dignity and safety"] },
+  { id: "choices", cards: ["Pause before a choice", "Plan for pressure"] },
+  { id: "media", cards: ["Purpose, Plan, Pause", "Choose what you invite in"] },
+  { id: "gratitude", cards: ["Notice what your body can do", "One small act of care"] },
+];
+
+function createMemoryDeck() {
+  const cards = memoryPairs.flatMap((pair) => pair.cards.map((text, index) => ({
+    id: `${pair.id}-${index}`,
+    pairId: pair.id,
+    text,
+  })));
+
+  for (let index = cards.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [cards[index], cards[swapIndex]] = [cards[swapIndex], cards[index]];
+  }
+
+  return cards;
+}
+
+function MatchTheTruthGame({ onBack }) {
+  const [cards, setCards] = useState(createMemoryDeck);
+  const [flippedCards, setFlippedCards] = useState([]);
+  const [matchedPairs, setMatchedPairs] = useState([]);
+  const [moves, setMoves] = useState(0);
+  const [isChecking, setIsChecking] = useState(false);
+  const isComplete = matchedPairs.length === memoryPairs.length;
+
+  function flipCard(card) {
+    if (isChecking || isComplete || flippedCards.includes(card.id) || matchedPairs.includes(card.pairId)) return;
+
+    const nextFlippedCards = [...flippedCards, card.id];
+    setFlippedCards(nextFlippedCards);
+    if (nextFlippedCards.length < 2) return;
+
+    setMoves((currentMoves) => currentMoves + 1);
+    const firstCard = cards.find((candidate) => candidate.id === nextFlippedCards[0]);
+    if (firstCard.pairId === card.pairId) {
+      setMatchedPairs((currentPairs) => [...currentPairs, card.pairId]);
+      setFlippedCards([]);
+      return;
+    }
+
+    setIsChecking(true);
+    window.setTimeout(() => {
+      setFlippedCards([]);
+      setIsChecking(false);
+    }, 850);
+  }
+
+  function restartGame() {
+    setCards(createMemoryDeck());
+    setFlippedCards([]);
+    setMatchedPairs([]);
+    setMoves(0);
+    setIsChecking(false);
+  }
+
+  return (
+    <main className="app-shell mini-game-screen">
+      <Header onBack={onBack} />
+      <section className="mini-game-page">
+        <button className="text-button" onClick={onBack} type="button">← Back to activities</button>
+        <p className="eyebrow">QUICK PLAY · YOUR BODY IS SACRED</p>
+        <h1>Match the <em>Truth.</em></h1>
+        <p className="mini-game-intro">Find the pairs that belong together. Take your time and turn over two cards each move.</p>
+        <div className="memory-scoreboard" aria-live="polite">
+          <span>MOVES <strong>{moves}</strong></span>
+          <span>PAIRS <strong>{matchedPairs.length} / {memoryPairs.length}</strong></span>
         </div>
+        {isComplete ? (
+          <section className="memory-complete" aria-live="polite">
+            <p className="eyebrow">ALL MATCHED</p>
+            <h2>You found the connections.</h2>
+            <p>You matched all six pairs in {moves} {moves === 1 ? "move" : "moves"}.</p>
+            <button className="primary-button" onClick={restartGame} type="button">Play again</button>
+          </section>
+        ) : (
+          <div className="memory-grid" role="group" aria-label="Twelve memory cards">
+            {cards.map((card, index) => {
+              const isMatched = matchedPairs.includes(card.pairId);
+              const isFlipped = flippedCards.includes(card.id) || isMatched;
+              return (
+                <button
+                  aria-label={isMatched || isFlipped ? card.text : `Hidden card ${index + 1}`}
+                  aria-pressed={isFlipped}
+                  className={`memory-card ${isFlipped ? "revealed" : ""} ${isMatched ? "matched" : ""}`}
+                  disabled={isChecking || isMatched}
+                  key={card.id}
+                  onClick={() => flipCard(card)}
+                  type="button"
+                >
+                  <span>{isFlipped ? card.text : "?"}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {!isComplete && <p className="memory-hint" aria-live="polite">{isChecking ? "Not a match—try another pair." : "Look for ideas that support each other."}</p>}
       </section>
     </main>
   );
@@ -958,6 +1073,7 @@ function BoardGameScreen({
   onResolve,
   onReset,
 }) {
+  const [isNarrowScreen, setIsNarrowScreen] = useState(() => window.matchMedia("(max-width: 760px)").matches);
   const [openedQuestionKey, setOpenedQuestionKey] = useState(null);
   const [slideAnimation, setSlideAnimation] = useState(null);
   const activeTeam = getActiveTeam(game);
@@ -997,6 +1113,13 @@ function BoardGameScreen({
     return () => window.clearTimeout(timeout);
   }, [slideAnimation]);
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 760px)");
+    const updateScreenSize = (event) => setIsNarrowScreen(event.matches);
+    mediaQuery.addEventListener("change", updateScreenSize);
+    return () => mediaQuery.removeEventListener("change", updateScreenSize);
+  }, []);
+
   function resolveSpecialLanding() {
     if (landedSpace?.transport?.type === "slide" && activeTeam) {
       setSlideAnimation({ spaceId: landedSpace.id, teamId: activeTeam.id, color: activeTeam.color });
@@ -1012,6 +1135,20 @@ function BoardGameScreen({
       const top = turnBox.getBoundingClientRect().top + window.scrollY;
       window.scrollTo(0, Math.max(0, top - 16));
     }, 80);
+  }
+
+  if (isNarrowScreen) {
+    return (
+      <main className="app-shell board-screen board-mobile-notice">
+        <Header onBack={onReset} />
+        <section className="board-mobile-notice-content">
+          <p className="eyebrow">SACRED BODY QUEST</p>
+          <h1>Only viewable on computer</h1>
+          <p>The winding board and game pieces need a larger screen. The weekly lessons and journal are still available on this device.</p>
+          <button className="primary-button" onClick={onReset} type="button">Back to activities</button>
+        </section>
+      </main>
+    );
   }
 
   return (
