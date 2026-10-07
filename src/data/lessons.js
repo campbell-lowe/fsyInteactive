@@ -1,3 +1,24 @@
+const octoberMagazineArticle = (slug, title) => ({
+  issue: 'For the Strength of Youth · October 2026',
+  title,
+  url: `https://www.churchofjesuschrist.org/study/ftsoy/2026/10/${slug}?lang=eng`,
+});
+
+export const octoberMagazineIssue = {
+  title: 'For the Strength of Youth October 2026',
+  url: 'https://www.churchofjesuschrist.org/study/ftsoy/2026/10?lang=eng',
+  articles: {
+    identity: octoberMagazineArticle('02-god-knows-and-loves-you', 'God Knows and Loves You'),
+    revelation: octoberMagazineArticle('03-7-ways-to-increase-the-flow-of-revelation', '7 Ways to Increase the Flow of Revelation'),
+    hope: octoberMagazineArticle('04-we-can-find-hope', 'We Can Find Hope'),
+    prompting: octoberMagazineArticle('05-prompting-at-the-pool', 'Prompting at the Pool'),
+    integrity: octoberMagazineArticle('i-didnt-steal-or-cheat', 'I Didn’t Steal or Cheat'),
+    direction: octoberMagazineArticle('07-becoming-your-best-you', 'Becoming Your Best You'),
+    gifts: octoberMagazineArticle('09-god-can-use-your-gifts', 'God Can Use Your Gifts'),
+    perseverance: octoberMagazineArticle('10-earning-belts-and-trusting-god', 'Earning Belts and Trusting God'),
+  },
+};
+
 export const octoberLesson = {
   id: 'october-your-body-is-sacred',
   month: 'October',
@@ -59,7 +80,7 @@ export const octoberLesson = {
       name: 'Light of Christ',
       objective: 'Apply one uplifting principle.',
       scene: 'At the final overlook, each team carries one piece of light from the journey. The class combines them into a practical invitation for the week ahead.',
-      prompt: 'Complete this sentence as a team: “Because my body is sacred, I can show gratitude this week by…”',
+      prompt: 'What is one practical way to show gratitude for the body this week?',
       challenge: { label: 'Light the lookout', instruction: 'Each team offers one specific, private, realistic action. The host can click the guide when the class has collected a few ideas.', options: ['Care for my body with one small act of gratitude.', 'Speak about myself and others with more respect.', 'Ask for help when a choice feels unsafe or confusing.'] },
       reveal: 'Small, loving choices can turn belief into discipleship. We honor the gift by caring for ourselves, respecting others, and inviting God into our decisions.',
       discussion: 'What is one specific, private, and realistic action someone could try this week?',
@@ -76,6 +97,6 @@ export const scriptureSources = [
 
 export const additionalSources = [
   { type: 'Conference talk', title: 'The Sanctity of the Body', author: 'Susan W. Tanner', note: 'A companion about treating the body with reverence and gratitude.', url: 'https://www.churchofjesuschrist.org/study/general-conference/2005/10/the-sanctity-of-the-body?lang=eng' },
-  { type: 'FSY pamphlet', title: 'Your Body Is Sacred', author: 'For the Strength of Youth', note: 'The anchor lesson for this October module and its invitations for making choices.', url: 'https://www.churchofjesuschrist.org/study/manual/for-the-strength-of-youth/10-your-body-is-sacred?lang=eng' },
-  { type: 'Church magazines', title: 'Search body and spiritual health resources', author: 'Church magazines', note: 'Find age-appropriate articles from the Friend, New Era, and Liahona.', url: 'https://www.churchofjesuschrist.org/search?lang=eng&query=body%20is%20sacred%20magazine' },
+  { type: 'FSY Sunday lesson', title: 'Your Body Is Sacred', author: 'For the Strength of Youth', note: 'The October 2026 monthly lesson that anchors this module.', url: 'https://www.churchofjesuschrist.org/study/ftsoy/2026/10/fsy-lessons/00-intro?lang=eng' },
+  { type: 'FSY magazine issue', title: octoberMagazineIssue.title, author: 'For the Strength of Youth', note: 'The official October 2026 magazine issue, with article sources used throughout the board challenges.', url: octoberMagazineIssue.url },
 ];

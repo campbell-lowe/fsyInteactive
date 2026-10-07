@@ -1,37 +1,110 @@
+import { octoberMagazineIssue } from './lessons';
+
 const scriptureUrl = 'https://www.churchofjesuschrist.org/study/scriptures/nt/1-cor/6?lang=eng&id=p19-p20#p19';
+const spacesBetweenCircles = 6;
+const circleDefinitions = [
+  { id: 'start', label: 'Start', type: 'start' },
+  { id: 'village', label: 'Village of Identity', type: 'question', prompt: 'Inspired by “God Knows and Loves You”: someone says appearance determines who deserves respect. Which reply best reflects the article’s message about worth?', creativePrompt: 'Name one way a group can show respect before it knows someone’s story.', options: ['Offer a sincere compliment about their appearance to counter the criticism.', 'Point to what they have achieved as proof they deserve respect.', 'Affirm that God knows and loves them regardless of appearance or achievements.'], answerIndex: 2, magazineArticle: octoberMagazineIssue.articles.identity, resource: { label: 'Genesis 1:27', url: 'https://www.churchofjesuschrist.org/study/scriptures/ot/gen/1?lang=eng&id=p27#p27' } },
+  { id: 'garden', label: 'Garden of Care', type: 'question', prompt: '“We Can Find Hope” tells of turning to God during a health challenge. A fictional student feels worn out. What is the most helpful first response?', creativePrompt: 'Suggest one way to offer support while letting the person choose what help feels right.', options: ['Share a similar experience so they know they are not alone.', 'Ask what would help, listen first, and support their next step.', 'Offer a practical fix now, then check how they are feeling.'], answerIndex: 1, magazineArticle: octoberMagazineIssue.articles.hope },
+  { id: 'bridge', label: 'Use Your Gifts', type: 'question', prompt: 'In “God Can Use Your Gifts,” a young woman uses her talent to help someone. How can a group use different strengths to help a newcomer feel included?', creativePrompt: 'Name one way a group can make room for someone who has not joined in yet.', magazineArticle: octoberMagazineIssue.articles.gifts, resource: { label: 'The Sanctity of the Body', url: 'https://www.churchofjesuschrist.org/study/general-conference/2005/10/the-sanctity-of-the-body?lang=eng' } },
+  { id: 'crossroads', label: 'Integrity in Action', type: 'question', prompt: 'A teammate notices a chance to cheat without being caught. Which response best reflects the integrity shown in the October issue?', creativePrompt: 'Discuss what could make it easier to choose honesty before pressure arrives.', options: ['Finish the work honestly, even if the result is less impressive.', 'Ask a friend to check the answer, then decide whether to use it.', 'Use the answer this time and make a plan to prepare better next time.'], answerIndex: 0, magazineArticle: octoberMagazineIssue.articles.integrity },
+  { id: 'path', label: 'Path of Choices', type: 'question', prompt: '“Becoming Your Best You” offers counsel about choosing a path in life. A decision feels rushed. Which plan creates the clearest space to choose?', creativePrompt: 'Name one question a person could ask themselves before choosing a direction.', options: ['List the advantages and risks on your own before asking for counsel.', 'Ask friends who made a similar choice, then follow the group’s advice.', 'Pause, notice the pressure, name what matters, and seek trusted counsel.'], answerIndex: 2, magazineArticle: octoberMagazineIssue.articles.direction },
+  { id: 'prompting', label: 'Prompting at the Pool', type: 'question', prompt: 'In “Prompting at the Pool,” a young man acts on a prompting to help someone. What helped turn the prompting into a useful response?', creativePrompt: 'Discuss how someone can act on a prompting while still being thoughtful and respectful.', options: ['He noticed a need and chose a specific, considerate way to respond.', 'He waited until he could be certain how the other person would react.', 'He asked others to handle it so he would not misunderstand.'], answerIndex: 0, magazineArticle: octoberMagazineIssue.articles.prompting },
+  { id: 'story', label: 'Story in Action', type: 'question', prompt: 'Think about the turning point in “Prompting at the Pool.” What might have happened if the young man had ignored the prompting?', creativePrompt: 'Give two possible outcomes, then identify which details in the story support your thinking.', magazineArticle: octoberMagazineIssue.articles.prompting },
+  { id: 'temple', label: 'Guidance', type: 'question', prompt: '“7 Ways to Increase the Flow of Revelation” gives practical ideas for receiving guidance. Which approach best balances seeking, listening, and acting?', options: ['Make room to pray and study, then act on impressions consistent with truth.', 'Treat a strong feeling as enough reason to act immediately.', 'Wait for a clear sign before making even a small decision.'], answerIndex: 0, magazineArticle: octoberMagazineIssue.articles.revelation, resource: { label: '1 Corinthians 6:19–20', url: scriptureUrl } },
+  { id: 'hope', label: 'Hope in Hard Moments', type: 'question', prompt: '“We Can Find Hope” describes turning to God during a health challenge. Which kind of support can honor both faith and the person’s real needs?', creativePrompt: 'Discuss how a friend can offer spiritual and practical support without assuming what the person needs.', magazineArticle: octoberMagazineIssue.articles.hope },
+  { id: 'respect', label: 'Choose Integrity', type: 'question', prompt: 'In “I Didn’t Steal or Cheat,” a youth faces temptation. What is one helpful way a friend can support an honest choice?', creativePrompt: 'Think of a short response a friend could give that is supportive without shaming.', magazineArticle: octoberMagazineIssue.articles.integrity },
+  { id: 'fork', label: 'Choose a Path', type: 'question', prompt: '“Becoming Your Best You” explores deciding what path to take in life. Which plan is most likely to help someone make a thoughtful decision?', creativePrompt: 'Name one source of counsel a person could consider and one thing they should decide for themselves.', options: ['Ask a trusted person to choose, then decide whether their answer feels right.', 'Compare likely outcomes, seek trusted counsel, and make the choice yourself.', 'Choose the path with the least immediate stress, then reassess later.'], answerIndex: 1, magazineArticle: octoberMagazineIssue.articles.direction },
+  { id: 'lookout-path', label: 'Gifts in Practice', type: 'question', prompt: '“God Can Use Your Gifts” shows a talent blessing someone else. What makes a small act of service genuinely useful?', creativePrompt: 'Discuss how to offer help in a way that fits the other person, not just the helper.', magazineArticle: octoberMagazineIssue.articles.gifts },
+  { id: 'dawn', label: 'Keep Practicing', type: 'question', prompt: '“Earning Belts and Trusting God” follows two friends as they practice martial arts and trust the Lord. What does their progress suggest about patience and faith?', creativePrompt: 'Name a skill or goal where steady effort matters more than quick results.', magazineArticle: octoberMagazineIssue.articles.perseverance },
+  { id: 'reflection', label: 'Gratitude', type: 'question', prompt: 'What is one realistic way to show gratitude for your body this week?', creativePrompt: 'Discuss a small, practical act of care that fits a real person’s needs and circumstances.' },
+  { id: 'finish', label: 'The Lookout', type: 'finish' },
+];
+
+const routeTransitions = [
+  { from: 18, to: 32, type: 'bridge' },
+  { from: 53, to: 67, type: 'bridge' },
+  { from: 74, to: 87, type: 'bridge' },
+  { from: 38, to: 11, type: 'slide' },
+  { from: 73, to: 46, type: 'slide' },
+  { from: 95, to: 66, type: 'slide' },
+];
+
+const pathEventPairs = [
+  [{ title: 'Movement Boost', text: 'You went for a run and cared for your body.', points: 20 }, { title: 'Alcohol Choice', text: 'You chose to drink alcohol.', points: -50 }],
+  [{ title: 'Rest and Recovery', text: 'You made time for sleep and recovery.', points: 15 }, { title: 'Ignored an Injury', text: 'You ignored an injury instead of getting help.', points: -35 }],
+  [{ title: 'Water Break', text: 'You brought water and took a break during activity.', points: 10 }, { title: 'Skipped Rest', text: 'You stayed up late and skipped the rest your body needed.', points: -20 }],
+  [{ title: 'Safe Choice', text: 'You paused and chose the safer option with friends.', points: 25 }, { title: 'Unsafe Dare', text: 'You followed a dare that put your body at risk.', points: -45 }],
+  [{ title: 'Asked for Help', text: 'You asked a trusted adult for support when you needed it.', points: 15 }, { title: 'Kept It Hidden', text: 'You hid a problem instead of asking someone trustworthy for help.', points: -25 }],
+  [{ title: 'Stretch and Reset', text: 'You took a short break and listened to what your body needed.', points: 10 }, { title: 'Pushed Too Hard', text: 'You kept exercising after your body signaled it needed a rest.', points: -30 }],
+  [{ title: 'Team Movement', text: 'You invited a friend to join a fun, active game.', points: 20 }, { title: 'Cruel Comparison', text: 'You compared your body harshly with someone else’s.', points: -15 }],
+  [{ title: 'Nourishing Meal', text: 'You made time for a meal that helped you feel cared for.', points: 15 }, { title: 'Missed a Meal', text: 'You skipped a meal to meet an unrealistic appearance goal.', points: -40 }],
+  [{ title: 'Fresh Air', text: 'You took a walk outside and gave yourself a screen break.', points: 10 }, { title: 'No Break', text: 'You ignored your need for a screen break and sleep.', points: -20 }],
+  [{ title: 'Safety First', text: 'You used the right safety gear before an activity.', points: 25 }, { title: 'Skipped Safety', text: 'You skipped safety gear to save time.', points: -35 }],
+  [{ title: 'Supportive Friend', text: 'You checked in with a friend and listened without judgment.', points: 20 }, { title: 'Body Joke', text: 'You made a joke about someone’s body that hurt their feelings.', points: -25 }],
+  [{ title: 'Good Sleep Plan', text: 'You put your phone away and made time for sleep.', points: 20 }, { title: 'Late Night Scroll', text: 'You stayed up scrolling and felt worn out the next day.', points: -15 }],
+  [{ title: 'Gratitude', text: 'You noticed something your body helped you do today.', points: 15 }, { title: 'Self-Criticism', text: 'You spoke harshly to yourself about your appearance.', points: -20 }],
+  [{ title: 'Healthy Boundary', text: 'You set a boundary when a situation did not feel safe.', points: 10 }, { title: 'Ignored a Boundary', text: 'You ignored your own discomfort to fit in.', points: -30 }],
+  [{ title: 'Steady Practice', text: 'You practiced a skill patiently and celebrated your progress.', points: 20 }, { title: 'Overtraining', text: 'You kept going despite exhaustion and warning signs.', points: -40 }],
+];
+
+const pathEvents = new Map();
+pathEventPairs.forEach(([positiveEvent, negativeEvent], gapIndex) => {
+  const firstPathPosition = gapIndex * (spacesBetweenCircles + 1);
+  pathEvents.set(firstPathPosition + 2, positiveEvent);
+  pathEvents.set(firstPathPosition + 5, negativeEvent);
+});
+
+function createTrackSpaces() {
+  const transitionsByStart = new Map(routeTransitions.map((transition) => [transition.from, transition]));
+  const lastPosition = (circleDefinitions.length - 1) * (spacesBetweenCircles + 1);
+  const circleInterval = spacesBetweenCircles + 1;
+  const invalidTransition = routeTransitions.some(
+    ({ from, to }) =>
+      from < 0 ||
+      to < 0 ||
+      from > lastPosition ||
+      to > lastPosition ||
+      from % circleInterval === 0 ||
+      to % circleInterval === 0,
+  );
+
+  if (invalidTransition) {
+    throw new Error('Bridge and slide endpoints must stay on path spaces.');
+  }
+
+  return Array.from({ length: lastPosition + 1 }, (_, position) => {
+    if (position % circleInterval === 0) {
+      const circleIndex = position / circleInterval;
+      return { ...circleDefinitions[circleIndex], circleIndex, position };
+    }
+
+    const transition = transitionsByStart.get(position);
+    const event = pathEvents.get(position);
+    return {
+      id: `path-${position}`,
+      label: `Space ${position}`,
+      type: event ? 'event' : 'path',
+      position,
+      transport: transition ? { type: transition.type, destination: transition.to } : null,
+      event,
+    };
+  });
+}
 
 export const octoberBoard = {
   id: 'october-body-sacred-board',
   title: 'Your Body Is Sacred',
   subtitle: 'A shared tabletop adventure through identity, care, respect, and wise choices.',
   finishLabel: 'The Lookout',
-  spaces: [
-    { id: 'start', label: 'Start', type: 'start', row: 4, column: 1 },
-    { id: 'village', label: 'Village of Identity', type: 'challenge', row: 4, column: 2, prompt: 'A message says appearance determines worth. What could your team put on the village sign instead?', options: ['Every person is a beloved child of God.', 'Popularity tells us who matters.', 'Worth is earned by looking perfect.'], resource: { label: 'Genesis 1:27', url: 'https://www.churchofjesuschrist.org/study/scriptures/ot/gen/1?lang=eng&id=p27#p27' } },
-    { id: 'garden', label: 'Garden of Care', type: 'choice', row: 4, column: 3, prompt: 'A fictional student feels worn out. Which choice would be the kindest first step?', options: ['One more hour of comparison online.', 'A good night of rest.', 'A harsh self-critique.'] },
-    { id: 'bridge', label: 'Bridge of Respect', type: 'group', row: 4, column: 4, prompt: 'A group chat turns someone’s appearance into a joke. What could the whole group do to protect dignity?', resource: { label: 'The Sanctity of the Body', url: 'https://www.churchofjesuschrist.org/study/general-conference/2005/10/the-sanctity-of-the-body?lang=eng' } },
-    { id: 'crossroads', label: 'Crossroads', type: 'event', row: 3, column: 4, event: 'A trusted friend helps you pause before pressure takes over.', effect: 1 },
-    { id: 'path', label: 'Path of Choices', type: 'choice', row: 3, column: 3, prompt: 'Pressure makes a choice feel rushed. What should happen first?', options: ['Pause and notice the pressure.', 'Follow the loudest voice.', 'Decide before thinking about consequences.'] },
-    { id: 'shortcut', label: 'Kindness Shortcut', type: 'shortcut', row: 3, column: 2, destination: 'light', prompt: 'A team notices someone being left out and makes room for them. Take the shortcut.' },
-    { id: 'story', label: 'Story Stop', type: 'story', row: 3, column: 1, prompt: 'Share a fictional example of someone choosing respect over comparison. No personal stories are needed.' },
-    { id: 'temple', label: 'Temple Garden', type: 'challenge', row: 2, column: 1, prompt: 'Choose three words that describe how a person can care for a sacred gift.', options: ['Gratitude', 'Pressure', 'Rest', 'Respect', 'Comparison'], resource: { label: '1 Corinthians 6:19–20', url: scriptureUrl } },
-    { id: 'event-care', label: 'Gentle Reminder', type: 'event', row: 2, column: 2, event: 'The team remembers that growth does not need to be perfect. Move ahead one space.', effect: 1 },
-    { id: 'respect', label: 'Respect Ridge', type: 'group', row: 2, column: 3, prompt: 'Each team names one way words, media, or boundaries can show respect without sharing personal experiences.' },
-    { id: 'fork', label: 'Fork in the Road', type: 'choice', row: 2, column: 4, prompt: 'Which path protects both body and spirit when a choice feels unsafe?', options: ['Ask for trusted help.', 'Keep it secret to avoid awkwardness.', 'Let pressure make the decision.'] },
-    { id: 'lookout-path', label: 'Light Trail', type: 'story', row: 1, column: 4, prompt: 'Read the next space aloud and let the team imagine what their piece can see from the trail.' },
-    { id: 'dawn', label: 'Dawn Meadow', type: 'event', row: 1, column: 3, event: 'A teammate shares a helpful idea. Move ahead one space together.', effect: 1 },
-    { id: 'reflection', label: 'Reflection Grove', type: 'challenge', row: 1, column: 2, prompt: 'Complete this sentence with a practical, private action: “Because my body is sacred, I can…”', options: ['Care for myself with gratitude.', 'Compare myself more often.', 'Ignore what my body needs.'] },
-    { id: 'finish', label: 'The Lookout', type: 'finish', row: 1, column: 1 },
-  ],
+  magazineIssue: octoberMagazineIssue,
+  spaces: createTrackSpaces(),
 };
 
 export const spaceTypeLabels = {
   start: 'Start',
-  challenge: 'Challenge',
-  choice: 'Choice',
+  question: 'Question',
   event: 'Event',
-  shortcut: 'Shortcut',
-  group: 'Group Challenge',
-  story: 'Story',
+  path: 'Path space',
   finish: 'Finish',
 };
