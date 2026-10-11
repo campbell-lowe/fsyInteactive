@@ -225,7 +225,7 @@ export const principleJournalGuide = {
       bookOfMormon: { reference: '2 Nephi 2:25', title: 'Joy in God’s plan', url: 'https://www.churchofjesuschrist.org/study/scriptures/bofm/2-ne/2?lang=eng&id=p25#p25' },
       conferenceQuote: { text: 'He sees you as His child.', speaker: 'Dieter F. Uchtdorf', talk: 'You Matter to Him', url: 'https://www.churchofjesuschrist.org/study/general-conference/2011/10/you-matter-to-him?lang=eng' },
       scripture: { reference: 'Genesis 1:27', title: 'Created in God’s image', url: 'https://www.churchofjesuschrist.org/study/scriptures/ot/gen/1?lang=eng&id=p27#p27' },
-      reflection: 'What is one truth about your identity you want to remember?',
+      reflection: 'What does the Book of Mormon teach about why we are here, and how might that shape the way we see our bodies?',
     },
     {
       id: 'gratitude',
@@ -234,7 +234,7 @@ export const principleJournalGuide = {
       bookOfMormon: { reference: 'Alma 34:38', title: 'Live in thanksgiving', url: 'https://www.churchofjesuschrist.org/study/scriptures/bofm/alma/34?lang=eng&id=p38#p38' },
       conferenceQuote: { text: 'The body is a gift to be treated with gratitude and respect.', speaker: 'Susan W. Tanner', talk: 'The Sanctity of the Body', url: 'https://www.churchofjesuschrist.org/study/general-conference/2005/10/the-sanctity-of-the-body?lang=eng' },
       scripture: { reference: 'Doctrine and Covenants 88:15–16', title: 'The spirit and the body', url: 'https://www.churchofjesuschrist.org/study/scriptures/dc-testament/dc/88?lang=eng&id=p15-p16#p15' },
-      reflection: 'What is one kind, realistic way you could care for yourself this week?',
+      reflection: 'What does caring for our bodies with gratitude look like in ordinary life? Which small acts are easy to overlook?',
     },
     {
       id: 'wisdom',
@@ -243,7 +243,7 @@ export const principleJournalGuide = {
       bookOfMormon: { reference: '2 Nephi 2:27', title: 'Choose liberty and eternal life', url: 'https://www.churchofjesuschrist.org/study/scriptures/bofm/2-ne/2?lang=eng&id=p27#p27' },
       conferenceQuote: { text: 'The Lord loves effort.', speaker: 'Russell M. Nelson', context: 'quoted in Joy D. Jones’s “An Especially Noble Calling”', url: 'https://www.churchofjesuschrist.org/study/general-conference/2020/04/26jones?lang=eng' },
       scripture: { reference: 'Doctrine and Covenants 89', title: 'The Word of Wisdom', url: 'https://www.churchofjesuschrist.org/study/scriptures/dc-testament/dc/89?lang=eng' },
-      reflection: 'What helps you make a choice that supports your physical or spiritual well-being?',
+      reflection: 'What connections do you see between wise choices, health, and spiritual strength? What helps when a choice feels hard?',
     },
     {
       id: 'respect',
@@ -252,7 +252,7 @@ export const principleJournalGuide = {
       bookOfMormon: { reference: 'Mosiah 18:9', title: 'Comfort and care for others', url: 'https://www.churchofjesuschrist.org/study/scriptures/bofm/mosiah/18?lang=eng&id=p9#p9' },
       conferenceQuote: { text: 'Self-control born of respect for the divine sacramental power this gift represents.', speaker: 'Jeffrey R. Holland', talk: 'Personal Purity', url: 'https://www.churchofjesuschrist.org/study/general-conference/1998/10/personal-purity?lang=eng' },
       scripture: { reference: '1 Corinthians 6:19–20', title: 'Your body is a temple', url: 'https://www.churchofjesuschrist.org/study/scriptures/nt/1-cor/6?lang=eng&id=p19-p20#p19' },
-      reflection: 'What can respect for someone’s worth look like in a conversation or relationship?',
+      reflection: 'How can we show respect for someone’s worth and boundaries in everyday conversations or relationships?',
     },
     {
       id: 'next-step',
@@ -260,7 +260,7 @@ export const principleJournalGuide = {
       teaching: 'A principle becomes personal as you use it to guide a real choice. Your next step can be small, private, and supported by someone you trust.',
       bookOfMormon: { reference: 'Alma 37:37', title: 'Counsel with the Lord', url: 'https://www.churchofjesuschrist.org/study/scriptures/bofm/alma/37?lang=eng&id=p37#p37' },
       conferenceQuote: { text: 'We are always progressing as long as we are striving to follow the Lord.', speaker: 'Joy D. Jones', talk: 'An Especially Noble Calling', url: 'https://www.churchofjesuschrist.org/study/general-conference/2020/04/26jones?lang=eng' },
-      reflection: 'What is one idea from this mini study you want to remember or act on?',
+      reflection: 'Which principle from this study would you most like to carry into the week? What could living it look like, and how might others support you?',
     },
   ],
 };

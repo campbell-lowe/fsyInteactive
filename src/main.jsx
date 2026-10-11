@@ -741,6 +741,7 @@ function PrincipleMiniStudy({ guide, journalEntries, setJournalEntries }) {
           </figure>
         )}
         <div className="principle-mini-study-journal">
+          <p className="eyebrow">DISCUSS &amp; REFLECT</p>
           <label htmlFor={`principle-entry-${entryId}`}>{activeSlide.reflection}</label>
           <textarea
             id={`principle-entry-${entryId}`}
