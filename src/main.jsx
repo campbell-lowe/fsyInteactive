@@ -1,7 +1,7 @@
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { octoberBoard, spaceTypeLabels } from "./data/boards";
-import { additionalSources, octoberLesson, octoberMagazineIssue, octoberWeeklyGuides, scriptureSources } from "./data/lessons";
+import { additionalSources, octoberLesson, octoberMagazineIssue, octoberWeeklyGuides, principleJournalGuide, scriptureSources } from "./data/lessons";
 import {
   awardPoints,
   clampTeamCount,
@@ -166,6 +166,7 @@ function createConnectorPath(space) {
 function App() {
   const [phase, setPhase] = useState("menu");
   const [selectedWeeklyGuide, setSelectedWeeklyGuide] = useState(null);
+  const [weeklyDiveReturnPhase, setWeeklyDiveReturnPhase] = useState("weekly");
   const [weeklyJournalEntries, setWeeklyJournalEntries] = useState({});
   const [participants, setParticipants] = useState(12);
   const [teamCount, setTeamCount] = useState(suggestTeamCount(12));
@@ -188,8 +189,9 @@ function App() {
     setTeamCount(suggestTeamCount(count));
   }
 
-  function openWeeklyDive(guide) {
+  function openWeeklyDive(guide, returnPhase = "weekly") {
     setSelectedWeeklyGuide(guide);
+    setWeeklyDiveReturnPhase(returnPhase);
     setPhase("weeklyDive");
   }
 
@@ -290,7 +292,7 @@ function App() {
     );
   }
 
-  if (phase === "menu") return <MenuScreen onStart={() => setPhase("setup")} onLesson={() => setPhase("lesson")} onWeekly={() => setPhase("weekly")} onMiniGame={() => setPhase("miniGame")} />;
+  if (phase === "menu") return <MenuScreen onStart={() => setPhase("setup")} onLesson={() => setPhase("lesson")} onWeekly={() => setPhase("weekly")} onPrinciple={() => openWeeklyDive(principleJournalGuide, "menu")} onMiniGame={() => setPhase("miniGame")} />;
   if (phase === "setup")
     return (
       <SetupScreen
@@ -312,7 +314,8 @@ function App() {
         guide={selectedWeeklyGuide}
         journalEntries={weeklyJournalEntries}
         setJournalEntries={setWeeklyJournalEntries}
-        onBack={() => setPhase("weekly")}
+        backLabel={weeklyDiveReturnPhase === "menu" ? "Back to home" : "Back to October lessons"}
+        onBack={() => setPhase(weeklyDiveReturnPhase)}
       />
     );
   }
@@ -399,7 +402,7 @@ const octoberSundayLessons = [
   },
 ];
 
-function MenuScreen({ onStart, onLesson, onWeekly, onMiniGame }) {
+function MenuScreen({ onStart, onLesson, onWeekly, onPrinciple, onMiniGame }) {
   return (
     <main className="app-shell menu-screen">
       <Header onBack={() => {}} />
@@ -465,6 +468,12 @@ function MenuScreen({ onStart, onLesson, onWeekly, onMiniGame }) {
               <strong>Diving Into the Lesson</strong>
               <p>Read scripture, explore the big ideas, and write personal reflections.</p>
               <b>Begin lesson →</b>
+            </button>
+            <button className="activity-card" onClick={onPrinciple} type="button">
+              <span>FOR THE STRENGTH OF YOUTH · CHAPTER 10</span>
+              <strong>Diving into the Principle</strong>
+              <p>Learn the chapter’s main ideas one step at a time, then write your own reflections.</p>
+              <b>Begin journal →</b>
             </button>
           </div>
         </section>
@@ -630,51 +639,131 @@ function WeeklyLessonGuideScreen({ onBack, onDive }) {
   );
 }
 
-function WeeklyLessonDiveScreen({ guide, journalEntries, setJournalEntries, onBack }) {
+function WeeklyLessonDiveScreen({ guide, journalEntries, setJournalEntries, backLabel = "Back to October lessons", onBack }) {
   return (
     <main className="app-shell weekly-screen">
       <Header onBack={onBack} />
       <section className="weekly-dive-guide">
-        <button className="text-button" onClick={onBack} type="button">← Back to October lessons</button>
+        <button className="text-button" onClick={onBack} type="button">← {backLabel}</button>
         <p className="eyebrow">{guide.week} · FOR THE STRENGTH OF YOUTH</p>
         <h1>{guide.title}</h1>
         <p className="weekly-dive-intro">{guide.summary}</p>
-        <figure className="weekly-dive-quote">
-          <blockquote>“{guide.quote}”</blockquote>
-          <figcaption>{guide.quoteSource}</figcaption>
-        </figure>
+        {guide.quote && (
+          <figure className="weekly-dive-quote">
+            <blockquote>“{guide.quote}”</blockquote>
+            <figcaption>{guide.quoteSource}</figcaption>
+          </figure>
+        )}
         <section className="weekly-dive-scriptures">
-          <p className="eyebrow">READ THE SCRIPTURES</p>
+          <p className="eyebrow">{guide.readingHeading || "READ THE SCRIPTURES"}</p>
           {guide.scriptures.map((scripture) => (
             <a href={scripture.url} key={scripture.reference} target="_blank" rel="noreferrer">
               <strong>{scripture.reference}</strong><span>{scripture.title} ↗</span>
             </a>
           ))}
         </section>
-        <section className="weekly-dive-journal">
-          <p className="eyebrow">YOUR JOURNAL</p>
-          <h2>What stands out to you?</h2>
-          {guide.questions.map((question, index) => {
-            const entryId = `${guide.id}-${index}`;
-            return (
-              <div className="weekly-dive-question" key={question}>
-                <label htmlFor={`weekly-entry-${entryId}`}>{question}</label>
-                <textarea
-                  id={`weekly-entry-${entryId}`}
-                  maxLength="1000"
-                  onChange={(event) => setJournalEntries((entries) => ({ ...entries, [entryId]: event.target.value }))}
-                  placeholder="A thought, a question, or something you want to remember..."
-                  rows="3"
-                  value={journalEntries[entryId] || ""}
-                />
-              </div>
-            );
-          })}
-          <p className="lesson-journal-note">Your writing stays in this tab and clears when you leave the guide.</p>
-        </section>
-        <a className="weekly-official-link" href={guide.url} target="_blank" rel="noreferrer">Open the official lesson ↗</a>
+        {guide.slides ? (
+          <PrincipleMiniStudy guide={guide} journalEntries={journalEntries} setJournalEntries={setJournalEntries} />
+        ) : (
+          <section className="weekly-dive-journal">
+            <p className="eyebrow">YOUR JOURNAL</p>
+            <h2>What stands out to you?</h2>
+            {guide.questions.map((question, index) => {
+              const entryId = `${guide.id}-${index}`;
+              return (
+                <div className="weekly-dive-question" key={question}>
+                  <label htmlFor={`weekly-entry-${entryId}`}>{question}</label>
+                  <textarea
+                    id={`weekly-entry-${entryId}`}
+                    maxLength="1000"
+                    onChange={(event) => setJournalEntries((entries) => ({ ...entries, [entryId]: event.target.value }))}
+                    placeholder="A thought, a question, or something you want to remember..."
+                    rows="3"
+                    value={journalEntries[entryId] || ""}
+                  />
+                </div>
+              );
+            })}
+            <p className="lesson-journal-note">Your writing stays in this tab and clears when you leave the guide.</p>
+          </section>
+        )}
+        <a className="weekly-official-link" href={guide.url} target="_blank" rel="noreferrer">{guide.officialLinkLabel || "Open the official lesson"} ↗</a>
       </section>
     </main>
+  );
+}
+
+function PrincipleMiniStudy({ guide, journalEntries, setJournalEntries }) {
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const activeSlide = guide.slides[activeSlideIndex];
+  const entryId = `${guide.id}-${activeSlide.id}`;
+  const isLastSlide = activeSlideIndex === guide.slides.length - 1;
+
+  return (
+    <section className="principle-mini-study" aria-label="Guided principle study">
+      <div className="principle-mini-study-progress">
+        <span>MINI STUDY · {activeSlideIndex + 1} OF {guide.slides.length}</span>
+        <div
+          className="lesson-progress-track"
+          role="progressbar"
+          aria-label="Mini study progress"
+          aria-valuemin={1}
+          aria-valuemax={guide.slides.length}
+          aria-valuenow={activeSlideIndex + 1}
+        >
+          <span style={{ width: `${(activeSlideIndex + 1) / guide.slides.length * 100}%` }} />
+        </div>
+      </div>
+      <article className="principle-mini-study-slide" aria-live="polite">
+        <p className="eyebrow">{activeSlideIndex === 0 ? "THE BIG IDEA" : `IDEA ${String(activeSlideIndex + 1).padStart(2, "0")}`}</p>
+        <h2>{activeSlide.title}</h2>
+        <p className="principle-mini-study-teaching">{activeSlide.teaching}</p>
+        {activeSlide.bookOfMormon && (
+          <a className="principle-mini-study-scripture" href={activeSlide.bookOfMormon.url} target="_blank" rel="noreferrer">
+            BOOK OF MORMON · {activeSlide.bookOfMormon.reference} · {activeSlide.bookOfMormon.title} ↗
+          </a>
+        )}
+        {activeSlide.scripture && (
+          <a className="principle-mini-study-scripture principle-mini-study-additional-scripture" href={activeSlide.scripture.url} target="_blank" rel="noreferrer">
+            ADDITIONAL SCRIPTURE · {activeSlide.scripture.reference} · {activeSlide.scripture.title} ↗
+          </a>
+        )}
+        {activeSlide.conferenceQuote && (
+          <figure className="principle-mini-study-quote">
+            <p className="eyebrow">FROM GENERAL CONFERENCE</p>
+            <blockquote>“{activeSlide.conferenceQuote.text}”</blockquote>
+            <figcaption>
+              {activeSlide.conferenceQuote.speaker}
+              {activeSlide.conferenceQuote.context && ` · ${activeSlide.conferenceQuote.context}`}
+              {!activeSlide.conferenceQuote.context && ` · `}
+              <a href={activeSlide.conferenceQuote.url} target="_blank" rel="noreferrer">{activeSlide.conferenceQuote.talk || "Read the talk"} ↗</a>
+            </figcaption>
+          </figure>
+        )}
+        <div className="principle-mini-study-journal">
+          <label htmlFor={`principle-entry-${entryId}`}>{activeSlide.reflection}</label>
+          <textarea
+            id={`principle-entry-${entryId}`}
+            maxLength="1000"
+            onChange={(event) => setJournalEntries((entries) => ({ ...entries, [entryId]: event.target.value }))}
+            placeholder="Write a thought, question, or small next step..."
+            rows="3"
+            value={journalEntries[entryId] || ""}
+          />
+        </div>
+      </article>
+      <nav className="principle-mini-study-controls" aria-label="Mini study slides">
+        <button className="text-button" disabled={activeSlideIndex === 0} onClick={() => setActiveSlideIndex((index) => Math.max(0, index - 1))} type="button">
+          ← Previous
+        </button>
+        {isLastSlide ? (
+          <button className="weekly-dive-button" onClick={() => setActiveSlideIndex(0)} type="button">Start again ↺</button>
+        ) : (
+          <button className="weekly-dive-button" onClick={() => setActiveSlideIndex((index) => index + 1)} type="button">Next idea →</button>
+        )}
+      </nav>
+      <p className="lesson-journal-note">Your writing stays in this tab and clears when you leave the guide.</p>
+    </section>
   );
 }
 

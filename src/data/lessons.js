@@ -202,6 +202,69 @@ export const octoberWeeklyGuides = {
   },
 };
 
+export const principleJournalGuide = {
+  id: 'principle-journal',
+  week: 'Guided journal',
+  title: 'Diving into the Principle',
+  url: 'https://www.churchofjesuschrist.org/study/manual/for-the-strength-of-youth/10-your-body-is-sacred?lang=eng',
+  summary: 'A short guided introduction to the main ideas in the For the Strength of Youth chapter “Your Body Is Sacred.” Learn one principle at a time, then write your own reflections.',
+  readingHeading: 'CHAPTER SOURCE',
+  officialLinkLabel: 'Open the official chapter',
+  scriptures: [
+    {
+      reference: 'FOR THE STRENGTH OF YOUTH · CHAPTER 10',
+      title: 'Your Body Is Sacred',
+      url: 'https://www.churchofjesuschrist.org/study/manual/for-the-strength-of-youth/10-your-body-is-sacred?lang=eng',
+    },
+  ],
+  slides: [
+    {
+      id: 'identity',
+      title: 'Your body is part of your identity',
+      teaching: 'The chapter teaches that your body is a gift from Heavenly Father. Remembering your divine identity can shape how you see and care for yourself.',
+      bookOfMormon: { reference: '2 Nephi 2:25', title: 'Joy in God’s plan', url: 'https://www.churchofjesuschrist.org/study/scriptures/bofm/2-ne/2?lang=eng&id=p25#p25' },
+      conferenceQuote: { text: 'He sees you as His child.', speaker: 'Dieter F. Uchtdorf', talk: 'You Matter to Him', url: 'https://www.churchofjesuschrist.org/study/general-conference/2011/10/you-matter-to-him?lang=eng' },
+      scripture: { reference: 'Genesis 1:27', title: 'Created in God’s image', url: 'https://www.churchofjesuschrist.org/study/scriptures/ot/gen/1?lang=eng&id=p27#p27' },
+      reflection: 'What is one truth about your identity you want to remember?',
+    },
+    {
+      id: 'gratitude',
+      title: 'Care can be an act of gratitude',
+      teaching: 'Respecting your body includes everyday choices that support physical and spiritual well-being, such as rest, nourishment, movement, and asking for help.',
+      bookOfMormon: { reference: 'Alma 34:38', title: 'Live in thanksgiving', url: 'https://www.churchofjesuschrist.org/study/scriptures/bofm/alma/34?lang=eng&id=p38#p38' },
+      conferenceQuote: { text: 'The body is a gift to be treated with gratitude and respect.', speaker: 'Susan W. Tanner', talk: 'The Sanctity of the Body', url: 'https://www.churchofjesuschrist.org/study/general-conference/2005/10/the-sanctity-of-the-body?lang=eng' },
+      scripture: { reference: 'Doctrine and Covenants 88:15–16', title: 'The spirit and the body', url: 'https://www.churchofjesuschrist.org/study/scriptures/dc-testament/dc/88?lang=eng&id=p15-p16#p15' },
+      reflection: 'What is one kind, realistic way you could care for yourself this week?',
+    },
+    {
+      id: 'wisdom',
+      title: 'Choose what strengthens you',
+      teaching: 'The chapter connects the Word of Wisdom with choices about substances. It encourages choices that protect your health and help you stay close to the Spirit.',
+      bookOfMormon: { reference: '2 Nephi 2:27', title: 'Choose liberty and eternal life', url: 'https://www.churchofjesuschrist.org/study/scriptures/bofm/2-ne/2?lang=eng&id=p27#p27' },
+      conferenceQuote: { text: 'The Lord loves effort.', speaker: 'Russell M. Nelson', context: 'quoted in Joy D. Jones’s “An Especially Noble Calling”', url: 'https://www.churchofjesuschrist.org/study/general-conference/2020/04/26jones?lang=eng' },
+      scripture: { reference: 'Doctrine and Covenants 89', title: 'The Word of Wisdom', url: 'https://www.churchofjesuschrist.org/study/scriptures/dc-testament/dc/89?lang=eng' },
+      reflection: 'What helps you make a choice that supports your physical or spiritual well-being?',
+    },
+    {
+      id: 'respect',
+      title: 'Respect yourself and others',
+      teaching: 'The chapter teaches that chastity includes honoring the sacredness of the body, respecting personal boundaries, and recognizing the worth of every person.',
+      bookOfMormon: { reference: 'Mosiah 18:9', title: 'Comfort and care for others', url: 'https://www.churchofjesuschrist.org/study/scriptures/bofm/mosiah/18?lang=eng&id=p9#p9' },
+      conferenceQuote: { text: 'Self-control born of respect for the divine sacramental power this gift represents.', speaker: 'Jeffrey R. Holland', talk: 'Personal Purity', url: 'https://www.churchofjesuschrist.org/study/general-conference/1998/10/personal-purity?lang=eng' },
+      scripture: { reference: '1 Corinthians 6:19–20', title: 'Your body is a temple', url: 'https://www.churchofjesuschrist.org/study/scriptures/nt/1-cor/6?lang=eng&id=p19-p20#p19' },
+      reflection: 'What can respect for someone’s worth look like in a conversation or relationship?',
+    },
+    {
+      id: 'next-step',
+      title: 'Carry one principle with you',
+      teaching: 'A principle becomes personal as you use it to guide a real choice. Your next step can be small, private, and supported by someone you trust.',
+      bookOfMormon: { reference: 'Alma 37:37', title: 'Counsel with the Lord', url: 'https://www.churchofjesuschrist.org/study/scriptures/bofm/alma/37?lang=eng&id=p37#p37' },
+      conferenceQuote: { text: 'We are always progressing as long as we are striving to follow the Lord.', speaker: 'Joy D. Jones', talk: 'An Especially Noble Calling', url: 'https://www.churchofjesuschrist.org/study/general-conference/2020/04/26jones?lang=eng' },
+      reflection: 'What is one idea from this mini study you want to remember or act on?',
+    },
+  ],
+};
+
 export const scriptureSources = [
   { reference: '1 Corinthians 6:19–20', title: 'Your body is a temple', note: 'Paul teaches that our bodies are sacred and worth honoring.', url: 'https://www.churchofjesuschrist.org/study/scriptures/nt/1-cor/6?lang=eng&id=p19-p20#p19' },
   { reference: 'Genesis 1:27', title: 'Created in God’s image', note: 'Our bodies are part of God’s intentional, divine creation.', url: 'https://www.churchofjesuschrist.org/study/scriptures/ot/gen/1?lang=eng&id=p27#p27' },
